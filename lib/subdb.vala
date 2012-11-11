@@ -77,7 +77,7 @@ namespace Submarine {
 			var hash = file_hash(file);
 			
 			var message = new Soup.Message("GET",XMLRPC_URI+"?action=search&hash=%s".printf(hash));
-			message.request_headers.append("User-Agent","SubDB/1.0 (submarine/0.1.3; https://github.com/blazt/submarine)");
+			message.request_headers.append("User-Agent","SubDB/1.0 (submarine/0.1; https://github.com/blazt/submarine)");
 			uint status_code = this.session.send_message(message);
 			
 
@@ -98,7 +98,7 @@ namespace Submarine {
 		public override Subtitle? download(Subtitle subtitle) {
 			
 			var message = new Soup.Message("GET",XMLRPC_URI+"?action=download&hash=%s&language_codes_string=%s".printf(this.filehash,subtitle.language));
-			message.request_headers.append("User-Agent","SubDB/1.0 (submarine/0.1.3; https://github.com/blazt/submarine)");
+			message.request_headers.append("User-Agent","SubDB/1.0 (submarine/0.1; https://github.com/blazt/submarine)");
 			uint status_code = this.session.send_message(message);
 			if (status_code==200) {
 				var rsp=message.response_headers;
