@@ -24,6 +24,6 @@ namespace Submarine {
 		public bool has_data {
 			get {return data.length > 0;}
 		}
+		
 	}
-	
 }

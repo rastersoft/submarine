@@ -2,12 +2,9 @@ namespace Submarine {
 	
 	private class SubDBServer : SubtitleServer {
 		private Soup.SessionSync session;
-		private string session_token;
 		
 		private const string XMLRPC_URI = "http://api.thesubdb.com/";
-		
-		private Gee.HashSet<string> supported_languages;
-		private string supp_langs=null;
+		private const string USER_AGENT = "SubDB/1.0 (submarine/0.1; https://github.com/blazt/submarine)";
 		
 		private string filepath;
 		private string filehash;
@@ -16,7 +13,7 @@ namespace Submarine {
 			this.info = ServerInfo("SubDB",
 					"http://thesubdb.com",
 					"db");
-					
+			
 			filepath="";
 		}
 
@@ -77,7 +74,7 @@ namespace Submarine {
 			var hash = file_hash(file);
 			
 			var message = new Soup.Message("GET",XMLRPC_URI+"?action=search&hash=%s".printf(hash));
-			message.request_headers.append("User-Agent","SubDB/1.0 (submarine/0.1; https://github.com/blazt/submarine)");
+			message.request_headers.append("User-Agent",USER_AGENT);
 			uint status_code = this.session.send_message(message);
 			
 
@@ -98,7 +95,7 @@ namespace Submarine {
 		public override Subtitle? download(Subtitle subtitle) {
 			
 			var message = new Soup.Message("GET",XMLRPC_URI+"?action=download&hash=%s&language_codes_string=%s".printf(this.filehash,subtitle.language));
-			message.request_headers.append("User-Agent","SubDB/1.0 (submarine/0.1; https://github.com/blazt/submarine)");
+			message.request_headers.append("User-Agent",USER_AGENT);
 			uint status_code = this.session.send_message(message);
 			if (status_code==200) {
 				var rsp=message.response_headers;
