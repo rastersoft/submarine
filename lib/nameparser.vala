@@ -6,12 +6,12 @@ namespace Submarine {
 		YEAR,
 		SEASON_CHAPTER,
 		CODEC,
-		RESOLUTION
+		RESOLUTION,
+		SOURCE
 	}
 	
 	public enum Resolution {
 		PAL_NTSC,
-		HDTV,
 		HDREADY,
 		FULLHD,
 		UNKNOWN
@@ -25,10 +25,19 @@ namespace Submarine {
 		UNKNOWN
 	}
 	
+	public enum Source {
+		DVDRIP,
+		BDRIP,
+		HDTV,
+		UNKNOWN
+	}
+	
 	public class NameParserNode {
 		
 		private string text;
 		public NameParserNode ?next;
+		public unowned NameParserNode ?prev;
+		
 		public NameParserNode ?child;
 		
 		public NameParserNode ?iterator;
@@ -36,12 +45,17 @@ namespace Submarine {
 		public Submarine.DataType type;
 		public Submarine.Resolution resolution;
 		public Submarine.Codec codec;
+		public Submarine.Source source;
 		public double confidence;
 		public int year;
 		public int season;
 		public int chapter;
 		
 		public int level;
+		
+		public string get_inner_text() {
+			return this.text;
+		}
 		
 		private string return_type() {
 			switch(this.type) {
@@ -55,23 +69,68 @@ namespace Submarine {
 				return "Codec";
 			case DataType.RESOLUTION:
 				return "Resolution";
+			case DataType.SOURCE:
+				return "Source";
 			default:
 				return "Unknown";
 			}
 		}
 		
-		public NameParserNode(string txt, NameParserNode ?thenext=null, int c_level=1) {
+		public NameParserNode.empty() {
+			this.type=DataType.UNKNOWN;
+			this.text="";
+			this.child=null;
+			this.next=null;
+			this.prev=null;
+		}
+		
+		public NameParserNode.new_copy(NameParserNode? p) {
+			
+			if (p!=null) {
+			
+				this.type=p.type;
+				this.confidence=p.confidence;
+				this.text=p.text;
+				this.child=null;
+				this.next=null;
+				this.prev=null;
+				switch(this.type) {
+					case Submarine.DataType.YEAR:
+						this.year=p.year;
+					break;
+					case Submarine.DataType.SEASON_CHAPTER:
+						this.season=p.season;
+						this.chapter=p.chapter;
+					break;
+					case Submarine.DataType.CODEC:
+						this.codec=p.codec;
+					break;
+					case Submarine.DataType.RESOLUTION:
+						this.resolution=p.resolution;
+					break;
+					case Submarine.DataType.SOURCE:
+						this.source=p.source;
+					break;
+					default:
+					break;
+				}
+			} else {
+				stdout.printf("Copiando NULL\n");
+			}
+		}
+		
+		public NameParserNode(string txt, NameParserNode ?thenext=null, int c_level=2) {
 			
 			this.level=c_level;
 			this.type=DataType.UNKNOWN;
 			this.text=txt;
 			this.next=thenext;
+			this.prev=null;
+			this.prev=null;
 			this.child=null;
 			this.split(' ');
 			this.split('_');
 			this.split('.');
-			this.split('(');
-			this.split(')');
 			this.split('[');
 			this.split(']');
 			this.split('{');
@@ -86,19 +145,16 @@ namespace Submarine {
 				if (this.check_pattern("\\dx\\d\\d",4,DataType.SEASON_CHAPTER)) {
 					this.season=int.parse(this.text.substring(0,1));
 					this.chapter=int.parse(this.text.substring(2,2));
+					this.confidence*=0.9; // a little less confidence to this format
 				}
 			}
 			
 			// Check for year
-			if (this.check_pattern("\\d\\d\\d\\d",4,DataType.YEAR)) {
-				this.year=int.parse(this.text);
+			if (this.check_pattern("\\(\\d\\d\\d\\d\\)",6,DataType.YEAR)) {
+				this.year=int.parse(this.text.substring(1,4));
 			}
 			
 			// Check for resolution
-			if (this.check_pattern("hdtv",4,DataType.RESOLUTION)) {
-				this.resolution=Resolution.HDTV;
-				this.confidence*=0.75;
-			}
 			if ((this.check_pattern("720p",4,DataType.RESOLUTION))||(this.check_pattern("1080i",4,DataType.RESOLUTION))) {
 				this.resolution=Resolution.HDREADY;
 			} else {
@@ -118,6 +174,16 @@ namespace Submarine {
 			} else if (this.check_pattern("mpeg",4,DataType.CODEC)) {
 				this.codec=Codec.MPEG;
 				this.confidence*=0.75;
+			}
+			
+			// Check for source
+			
+			if (this.check_pattern("bdrip",5,DataType.SOURCE)) {
+				this.source=Source.BDRIP;
+			} else if (this.check_pattern("dvdrip",6,DataType.SOURCE)) {
+				this.source=Source.DVDRIP;
+			} else if (this.check_pattern("hdtv",4,DataType.SOURCE)) {
+				this.source=Source.HDTV;
 			}
 		}
 		
@@ -151,7 +217,7 @@ namespace Submarine {
 			return false;
 		}
 		
-		private void split(unichar character) {
+		private void split(unichar character, unichar? c1=null, unichar? c2=null) {
 			var pos=this.text.index_of_char(character);
 			if (pos==0) {
 				this.text=this.text.substring(1);
@@ -161,12 +227,23 @@ namespace Submarine {
 					this.text=this.text.substring(0,l);
 				} else {
 					var t1=this.text.substring(0,pos);
+					if (c2!=null) {
+						t1+=(string)c2;
+					}
 					var t2=this.text.substring(pos+1);
+					if (c1!=null) {
+						t2+=(string)c1;
+					}
 					var newchild = new NameParserNode(t2,this.next,this.level);
 					this.text=t1;
 					this.next=newchild;
 				}
 			}
+		}
+		
+		private void dsplit(unichar c1, unichar c2) {
+			this.split(c1,null,c1);
+			this.split(c2,c2,null);
 		}
 		
 		public void print_content() {
@@ -213,18 +290,26 @@ namespace Submarine {
 	}
 	
 	public class NameParser{
+	
+		public string title;	
+		public int year;
+		public int season;
+		public int chapter;
+		public Submarine.Resolution resolution;
+		public Submarine.Codec codec;
+		public Submarine.Source source;
 		
-		NameParserNode ?node;
-		NameParserNode ?iterator;
+		private NameParserNode ?node;
+		private NameParserNode ?iterator;
 		
-		public void reset_iterator() {
+		private void reset_iterator() {
 			this.iterator=null;
 			if (this.node!=null) {
 				this.node.reset_iterator();
 			}
 		}
 		
-		public NameParserNode? get_next_iterator() {
+		private NameParserNode? get_next_iterator() {
 			
 			NameParserNode ?tmp;
 			
@@ -245,6 +330,17 @@ namespace Submarine {
 			}
 		}
 		
+		private void print_data(NameParserNode tree) {
+			
+			NameParserNode? element1;
+			
+			stdout.printf("\n\n");
+			for(element1=tree;element1!=null;element1=element1.next) {
+				element1.print_content();
+			}
+			stdout.printf("\n\n");
+		}
+		
 		public NameParser(File file) {
 			
 			// find season/chapter
@@ -254,65 +350,156 @@ namespace Submarine {
 			var filename=tmp.substring(0,pos);
 			var extension=tmp.substring(pos+1);
 			
+			// process the filename and create the data tree
 			node=new NameParserNode(filename);
 			
-			NameParserNode ?element;
+			// create a linear tree with the processed elements
 			
-			stdout.printf("\n\n");
+			NameParserNode ?element1;
+			NameParserNode ?element2;
+			NameParserNode ?tree=null;
+			unowned NameParserNode ?last=null;
+			
 			this.reset_iterator();
 			do {
-				element=this.get_next_iterator();
-				if (element==null) {
+				element1=this.get_next_iterator();
+				if (element1==null) {
 					break;
 				}
-				element.print_content();
+				element2=new NameParserNode.new_copy(element1);
+				if (tree==null) {
+					tree=element2;
+				}
+				if (last!=null) {
+					last.next=element2;
+				}
+				element2.prev=last;
+				last=element2;
 			} while(true);
 			
-			stdout.printf("\n\n");
+			// Group same elements and increase their confidence			
 			
-			/*
-			var season1 = new GLib.Regex("s\\d\\de\\d\\d\\D",RegexCompileFlags.CASELESS);
-			var season2 = new GLib.Regex("\\D\\dx\\d\\d\\D",RegexCompileFlags.CASELESS);
-			
-			MatchInfo match_info;
-			
-			string? previous=null;
-			string? next=null;
-			
-			if (season1.match(filename, 0, out match_info)) {
-				
-				var tmp = match_info.fetch(0);
-				
-				this.season=tmp.substring(1,2).to_int();
-				this.chapter=tmp.substring(4,2).to_int();
-				
-				int p_s;
-				int p_e;
-				
-				match_info.fetch_pos(0, out p_s, out p_e);
-				
-				previous = filename.substring(0,p_s);
-				next = filename.substring(p_e-1,-1);
-				
-			} else {
-				if (season2.match(filename, 0, out match_info)) {
-
-					var tmp = match_info.fetch(0);
-					
-					this.season=tmp.substring(1,1).to_int();
-					this.chapter=tmp.substring(3,2).to_int();
-					
-					int p_s;
-					int p_e;
-					
-					match_info.fetch_pos(0, out p_s, out p_e);
-					
-					previous = filename.substring(0,p_s+1);
-					next = filename.substring(p_e-1,-1);
-					
+			for(element1=tree;element1!=null;element1=element1.next) {
+				for(element2=element1.next;element2!=null;element2=element2.next) {
+					if ((element1.type!=DataType.UNKNOWN)&&(element1.type==element2.type)) {
+						bool are_equal;
+						
+						are_equal=false;
+						
+						switch(element1.type) {
+						case Submarine.DataType.YEAR:
+							if (element1.year==element2.year) {
+								are_equal=true;
+							}
+						break;
+						case Submarine.DataType.SEASON_CHAPTER:
+							if ((element1.season==element2.season)&&(element1.chapter==element2.chapter)) {
+								are_equal=true;
+							}
+						break;
+						case Submarine.DataType.CODEC:
+							if (element1.codec==element2.codec) {
+								are_equal=true;
+							}
+						break;
+						case Submarine.DataType.RESOLUTION:
+							if (element1.resolution==element2.resolution) {
+								are_equal=true;
+							}
+						break;
+						case Submarine.DataType.SOURCE:
+							if (element1.source==element2.source) {
+								are_equal=true;
+							}
+						break;
+						default:
+						break;
+						}
+						if (are_equal==true) {
+							
+							// Combine the confidence of both elements
+							element1.confidence=element1.confidence+element2.confidence-element1.confidence*element2.confidence;
+							
+							// and remove the element2
+							if (last==element2) {
+								last=element2.prev;
+							}
+							element2.prev.next=element2.next;
+							element2.prev=null;
+						}
+					}
 				}
 			}
-			stdout.printf("antes: %s\ndespues: %s\ntemporada %d\ncapitulo %d\n",previous,next,this.season,this.chapter);*/
+			
+			// finally, take the element with the biggest confidence
+			
+			this.title="";
+			this.year=0;
+			this.season=0;
+			this.chapter=0;
+			this.resolution=Resolution.UNKNOWN;
+			this.codec=Codec.UNKNOWN;
+			this.source=Source.UNKNOWN;
+			
+			double year_confidence=0.0;
+			double season_confidence=0.0;
+			double resolution_confidence=0.0;
+			double codec_confidence=0.0;
+			double source_confidence=0.0;
+			
+			bool doing_title=true;
+			
+			for(element1=tree;element1!=null;element1=element1.next) {
+				switch(element1.type) {
+				case Submarine.DataType.YEAR:
+					doing_title=false;
+					if (element1.confidence>year_confidence) {
+						year_confidence=element1.confidence;
+						this.year=element1.year;
+					}
+				break;
+				case Submarine.DataType.SEASON_CHAPTER:
+					doing_title=false;
+					if (element1.confidence>season_confidence) {
+						season_confidence=element1.confidence;
+						this.season=element1.season;
+						this.chapter=element1.chapter;
+					}
+				break;
+				case Submarine.DataType.CODEC:
+					doing_title=false;
+					if (element1.confidence>codec_confidence) {
+						codec_confidence=element1.confidence;
+						this.codec=element1.codec;
+					}
+				break;
+				case Submarine.DataType.RESOLUTION:
+					doing_title=false;
+					if (element1.confidence>resolution_confidence) {
+						resolution_confidence=element1.confidence;
+						this.resolution=element1.resolution;
+					}
+				break;
+				case Submarine.DataType.SOURCE:
+					doing_title=false;
+					if (element1.confidence>source_confidence) {
+						source_confidence=element1.confidence;
+						this.source=element1.source;
+					}
+				break;
+				case Submarine.DataType.UNKNOWN:
+					if (doing_title) {
+						if (this.title!="") {
+							this.title+=" ";
+						}
+						this.title+=element1.get_inner_text();
+					}
+				break;
+				default:
+				break;
+				}
+			}
+			
 		}
 	}
 }
