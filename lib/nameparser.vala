@@ -241,10 +241,10 @@ namespace Submarine {
 			}
 		}
 		
-		private void dsplit(unichar c1, unichar c2) {
+		/*private void dsplit(unichar c1, unichar c2) {
 			this.split(c1,null,c1);
 			this.split(c2,c2,null);
-		}
+		}*/
 		
 		public void print_content() {
 			stdout.printf("%s (%s %f) ",this.text,this.return_type(),this.confidence);
@@ -330,7 +330,7 @@ namespace Submarine {
 			}
 		}
 		
-		private void print_data(NameParserNode tree) {
+		/* public void print_data(NameParserNode tree) {
 			
 			NameParserNode? element1;
 			
@@ -341,6 +341,10 @@ namespace Submarine {
 			stdout.printf("\n\n");
 		}
 		
+		public void print_data2() {
+			stdout.printf("Title: %s\nSeason %d, chapter %d\n",this.title,this.season,this.chapter);
+		}*/
+		
 		public NameParser(File file) {
 			
 			// find season/chapter
@@ -348,7 +352,7 @@ namespace Submarine {
 			var tmp=file.get_basename();
 			var pos = tmp.last_index_of(".");
 			var filename=tmp.substring(0,pos);
-			var extension=tmp.substring(pos+1);
+			//var extension=tmp.substring(pos+1);
 			
 			// process the filename and create the data tree
 			node=new NameParserNode(filename);

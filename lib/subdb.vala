@@ -83,9 +83,11 @@ namespace Submarine {
 				var list = rv.split(",");
 				Value v = hash;
 				foreach(string sub in list) {
-					Subtitle subtitle = new Subtitle(this.info, v);
-					subtitle.language=sub;
-					subtitles_downloaded.add(subtitle);
+					if (languages.contains(sub)) {
+						Subtitle subtitle = new Subtitle(this.info, v);
+						subtitle.language=sub;
+						subtitles_downloaded.add(subtitle);
+					}
 				}
 			}
 			
