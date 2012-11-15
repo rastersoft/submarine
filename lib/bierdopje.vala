@@ -3,6 +3,7 @@ namespace Submarine {
 	private class BierdopjeServer : SubtitleServer {
 		private Soup.SessionSync session;
 		
+		// KEY AND USER AGENT VALUES STOLEN FROM SUBLIMINAL. DON'T USE THEM, USE THE OFICIAL KEY FOR SUBMARINE
 		private const string XMLRPC_URI = "http://api.bierdopje.com/A2B638AC5D804C2E/";
 		private const string USER_AGENT = "subliminal/0.1";
 		
