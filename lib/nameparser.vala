@@ -129,6 +129,7 @@ namespace Submarine {
 			this.prev=null;
 			this.child=null;
 			this.split(' ');
+			this.split('-');
 			this.split('_');
 			this.split('.');
 			this.split('[');
@@ -136,18 +137,23 @@ namespace Submarine {
 			this.split('{');
 			this.split('}');
 			
-			// Check sAAeBB Season/Episode
+			
 			if (this.check_pattern("s\\d\\de\\d\\d",6,DataType.SEASON_CHAPTER)) {
+				// Check sAAeBB Season/Episode
 				this.season=int.parse(this.text.substring(1,2));
 				this.chapter=int.parse(this.text.substring(4,2));
-			} else {
+			} else if (this.check_pattern("\\d\\dx\\d\\d",5,DataType.SEASON_CHAPTER)) {
+				// Check AAxBB Season/Episode
+				this.season=int.parse(this.text.substring(0,2));
+				this.chapter=int.parse(this.text.substring(3,2));
+				this.confidence*=0.9; // a little less confidence to this format
+			} else if (this.check_pattern("\\dx\\d\\d",4,DataType.SEASON_CHAPTER)) {
 				// Check AxBB Season/Episode
-				if (this.check_pattern("\\dx\\d\\d",4,DataType.SEASON_CHAPTER)) {
-					this.season=int.parse(this.text.substring(0,1));
-					this.chapter=int.parse(this.text.substring(2,2));
-					this.confidence*=0.9; // a little less confidence to this format
-				}
+				this.season=int.parse(this.text.substring(0,1));
+				this.chapter=int.parse(this.text.substring(2,2));
+				this.confidence*=0.9; // a little less confidence to this format
 			}
+			
 			
 			// Check for year
 			if (this.check_pattern("\\(\\d\\d\\d\\d\\)",6,DataType.YEAR)) {
@@ -493,10 +499,12 @@ namespace Submarine {
 				break;
 				case Submarine.DataType.UNKNOWN:
 					if (doing_title) {
-						if (this.title!="") {
-							this.title+=" ";
+						if(element1.get_inner_text().length>0) {
+							if (this.title!="") {
+								this.title+=" ";
+							}
+							this.title+=element1.get_inner_text();
 						}
-						this.title+=element1.get_inner_text();
 					}
 				break;
 				default:
