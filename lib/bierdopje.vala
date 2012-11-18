@@ -40,7 +40,7 @@ namespace Submarine {
 
 			var tmp=file.get_basename();
 			var pos = tmp.last_index_of(".");
-			var main_filename=tmp.substring(0,pos);			
+			var main_filename=tmp.substring(0,pos);
 			
 			var parser = new Submarine.NameParser(file);
 			if (parser.title==null) {
@@ -48,7 +48,7 @@ namespace Submarine {
 				return subtitles_downloaded;
 			}
 			
-			//stdout.printf("BierDopje: asking for \"%s\", Season %d, Chapter %d\n",parser.title, parser.season, parser.chapter);
+			stdout.printf("BierDopje: asking for \"%s\", Season %d, Chapter %d\n",parser.title, parser.season, parser.chapter);
 			
 			var cache = new CacheData("submarine_bierdopje");
 			
@@ -107,6 +107,9 @@ namespace Submarine {
 					var node=x->get_root_element();
 					var node2=this.find_xml_content("status",node);
 					if ((node2!=null)&&(node2->children!=null)&&(node2->children->content=="true")) {
+
+						bool found_subs=false;
+
 						var node3=this.find_xml_content("results",node);
 						if (node3!=null) {
 							Xml.Node *node4;
@@ -126,6 +129,7 @@ namespace Submarine {
 										node5=node5->next;
 									}
 									if ((c_filename==main_filename)&&(c_uri!="")) {
+										found_subs=true;
 										Value v = c_uri;
 										Subtitle subtitle = new Subtitle(this.info, v);
 										subtitle.language=l;
@@ -133,6 +137,41 @@ namespace Submarine {
 									}
 								}
 								node4=node4->next;
+							}
+						}
+
+						if (found_subs==false) { // if there are no subtitles, try comparing only parts of the filename to avoid suffixes problems
+							node3=this.find_xml_content("results",node);
+							if (node3!=null) {
+								Xml.Node *node4;
+								node4=node3->children;
+								var len2=main_filename.length;
+								while(node4!=null) {
+									if (node4->name=="result") {
+										Xml.Node *node5=node4->children;
+										string c_filename="";
+										string c_uri="";
+										while (node5!=null) {
+											if (node5->name=="filename") {
+												c_filename=node5->children->content;
+											}
+											if (node5->name=="downloadlink") {
+												c_uri=node5->children->content;
+											}
+											node5=node5->next;
+										}
+										var len=c_filename.length;
+										if (len<len2) {
+											if ((c_filename==main_filename.substring(0,len))&&(c_uri!="")) {
+												Value v = c_uri;
+												Subtitle subtitle = new Subtitle(this.info, v);
+												subtitle.language=l;
+												subtitles_downloaded.add(subtitle);
+											}
+										}
+									}
+									node4=node4->next;
+								}
 							}
 						}
 					}
