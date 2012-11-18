@@ -3,9 +3,10 @@ namespace Submarine {
 	private class BierdopjeServer : SubtitleServer {
 		private Soup.SessionSync session;
 		
-		// KEY AND USER AGENT VALUES STOLEN FROM SUBLIMINAL. DON'T USE THEM, USE THE OFICIAL KEY FOR SUBMARINE
-		private const string XMLRPC_URI = "http://api.bierdopje.com/A2B638AC5D804C2E/";
-		private const string USER_AGENT = "subliminal/0.1";
+		// Key for Submarine. Don't use it on other programs
+		// Thanks to BierDopje manager, and sorry for double posting O:)
+		private const string XMLRPC_URI = "http://api.bierdopje.com/79FD9171317EC74E/";
+		private const string USER_AGENT = "submarine/0.1";
 		
 		private string filepath;
 		
@@ -47,7 +48,7 @@ namespace Submarine {
 				return subtitles_downloaded;
 			}
 			
-			stdout.printf("BierDopje: asking for \"%s\", Season %d, Chapter %d\n",parser.title, parser.season, parser.chapter);
+			//stdout.printf("BierDopje: asking for \"%s\", Season %d, Chapter %d\n",parser.title, parser.season, parser.chapter);
 			
 			var cache = new CacheData("submarine_bierdopje");
 			
