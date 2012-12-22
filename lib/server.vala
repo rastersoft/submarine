@@ -139,6 +139,7 @@ namespace Submarine {
 		all_servers.add(new PodnapisiServer());
 		all_servers.add(new SubDBServer());
 		all_servers.add(new BierdopjeServer());
+		all_servers.add(new DivXsubsServer());
 		
 		return all_servers.read_only_view;
 	}

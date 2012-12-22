@@ -59,6 +59,33 @@ namespace Submarine {
 		return null;
 	}
 	
+	public string get_alternate(string language) {
+	/* If a two-letter language is given, it will return the equivalent three-letter code;
+	   if a three-letter code language is given, it will return the equivalent two-letter code (if possible) */
+	   
+	    bool two_letter=false;
+	    if (language.length==2) {
+		    two_letter=true;
+		}
+	   
+	   	var all_language_codes = Submarine.get_language_codes();
+	   
+	    
+		for(int i=0; i<LANGUAGE_INFOS_ARRAY.length; i++) {
+			var l = LANGUAGE_INFOS_ARRAY[i];
+			if(two_letter) {
+				if (l.short_code==language) {
+					return (l.long_code);
+				}
+			} else {
+				if ((l.long_code==language)||(l.long_code_alt==language)) {
+					return (l.short_code);
+				}
+			}
+		}
+		return "";
+	}
+	
 	//parsed from http://www.loc.gov/standards/iso639-2/php/code_list.php
 	private const LanguageInfo[] LANGUAGE_INFOS_ARRAY = {
 		{"aar",	null,	"aa",	"Afar"},
