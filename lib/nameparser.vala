@@ -154,10 +154,11 @@ namespace Submarine {
 				this.confidence*=0.9; // a little less confidence to this format
 			}
 			
-			
 			// Check for year
 			if (this.check_pattern("\\(\\d\\d\\d\\d\\)",6,DataType.YEAR)) {
 				this.year=int.parse(this.text.substring(1,4));
+			} else if (this.check_pattern("\\d\\d\\d\\d",4,DataType.YEAR)) {
+				this.year=int.parse(this.text.substring(0,4));
 			}
 			
 			// Check for resolution
