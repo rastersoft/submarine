@@ -7,10 +7,13 @@ namespace Submarine {
 	
 		private Gee.HashMap<string,string> key_values;
 		private string filepath;
+		private int64 c_version;
 	
-		public CacheData(string filename) {
+		public CacheData(string filename,int64 version) {
 			
+			this.c_version=version;
 			this.key_values = new Gee.HashMap<string,string>();
+			
 			
 			FileInputStream file_read;
 			
@@ -30,6 +33,7 @@ namespace Submarine {
 		
 			string line;
 	
+			bool first_line=true;
 			while ((line = in_stream.read_line (null, null)) != null) {
 				if (line.length==0) {
 					continue;
@@ -41,7 +45,15 @@ namespace Submarine {
 				values[1].replace("\\\\","\\");
 				values[0].replace("\n","");
 				values[1].replace("\n","");
-				this.key_values[values[0]]=values[1];
+				if (first_line) {
+					first_line=false;
+					// if the desired version number is greater than the version of the disk-stored database, don't load it
+					if ((values[0]!="version")||(int64.parse(values[1])<this.c_version)) {
+						break;
+					}
+				} else {
+					this.key_values[values[0]]=values[1];
+				}
 			}
 			in_stream.close();
 		}
@@ -65,6 +77,7 @@ namespace Submarine {
 			var config_file = GLib.File.new_for_path(this.filepath);
 			var file_write = config_file.replace(null, false,FileCreateFlags.NONE);
 
+			file_write.write(("version=%lld\n".printf(this.c_version)).data);
 			foreach(string vkey in this.key_values.keys) {
 				var vval = this.key_values.get(vkey);
 				

@@ -48,11 +48,17 @@ namespace Submarine {
 				return subtitles_downloaded;
 			}
 			
-			stdout.printf("BierDopje: asking for \"%s\", Season %d, Chapter %d\n",parser.title, parser.season, parser.chapter);
-			
-			var cache = new CacheData("submarine_bierdopje");
-			
-			var retval=cache.get_key(parser.title);
+			var cache = new CacheData("submarine_bierdopje",1);
+			string title;
+			if(parser.year!=-1) {
+				title="%s (%d)".printf(parser.title,parser.year);
+			} else {
+				title="%s".printf(parser.title);
+			}
+
+			stdout.printf("BierDopje: asking for \"%s\", Season %d, Chapter %d\n",title, parser.season, parser.chapter);
+
+			var retval=cache.get_key(title);
 			bool get_keys=false;
 			if (retval==null) {
 				get_keys=true;
@@ -66,7 +72,8 @@ namespace Submarine {
 			}
 	
 			if (get_keys) {
-				var message = new Soup.Message("GET",XMLRPC_URI+"GetShowByName/%s".printf(parser.title));
+				var petition="%sGetShowByName/%s".printf(XMLRPC_URI,title);
+				var message = new Soup.Message("GET",petition);
 				message.request_headers.append("User-Agent",USER_AGENT);
 
 				uint status_code = this.session.send_message(message);
@@ -87,7 +94,7 @@ namespace Submarine {
 						if ((node4!=null)&&(node4->children!=null)) {
 							tvdbid=node4->children->content;
 						}
-						cache.set_key(parser.title,"%s,%s".printf(showid,tvdbid));
+						cache.set_key(title,"%s,%s".printf(showid,tvdbid));
 					} else {
 						return subtitles_downloaded;
 					}
@@ -97,7 +104,8 @@ namespace Submarine {
 			}
 			
 			foreach(string l in languages) {
-				var message = new Soup.Message("GET",XMLRPC_URI+"GetAllSubsFor/%s/%d/%d/%s".printf(showid,parser.season,parser.chapter,l));
+				var petition="%sGetAllSubsFor/%s/%d/%d/%s".printf(XMLRPC_URI,showid,parser.season,parser.chapter,l);
+				var message = new Soup.Message("GET",petition);
 				message.request_headers.append("User-Agent",USER_AGENT);
 
 				uint status_code = this.session.send_message(message);

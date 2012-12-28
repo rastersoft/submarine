@@ -214,8 +214,8 @@ namespace Submarine {
 			
 			MatchInfo match_info;
 			
-			var year = new GLib.Regex(pattern,RegexCompileFlags.CASELESS);
-			if (year.match(this.text, 0, out match_info)) {
+			var i_year = new GLib.Regex(pattern,RegexCompileFlags.CASELESS);
+			if (i_year.match(this.text, 0, out match_info)) {
 				int s_pos;
 				int e_pos;
 				
@@ -461,9 +461,9 @@ namespace Submarine {
 			// finally, take the element with the biggest confidence
 			
 			this.title="";
-			this.year=0;
-			this.season=0;
-			this.chapter=0;
+			this.year=-1;
+			this.season=-1;
+			this.chapter=-1;
 			this.resolution=Resolution.UNKNOWN;
 			this.codec=Codec.UNKNOWN;
 			this.source=Source.UNKNOWN;
