@@ -140,6 +140,7 @@ namespace Submarine {
 		all_servers.add(new SubDBServer());
 		all_servers.add(new BierdopjeServer());
 		all_servers.add(new DivXsubsServer());
+		all_servers.add(new SubtitulosESServer());
 		
 		return all_servers.read_only_view;
 	}
