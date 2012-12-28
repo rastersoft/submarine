@@ -84,7 +84,21 @@ namespace Submarine {
 			this.prev=null;
 		}
 		
+		private void init_all() {
+			this.type=DataType.UNKNOWN;
+			this.resolution=Resolution.UNKNOWN;
+			this.codec=Codec.UNKNOWN;
+			this.source=Source.UNKNOWN;
+			this.confidence=0.0;
+			this.year=-1;
+			this.season=-1;
+			this.chapter=-1;
+			
+		}
+		
 		public NameParserNode.new_copy(NameParserNode? p) {
+			
+			this.init_all();
 			
 			if (p!=null) {
 			
@@ -120,6 +134,8 @@ namespace Submarine {
 		}
 		
 		public NameParserNode(string txt, NameParserNode ?thenext=null, int c_level=2) {
+			
+			this.init_all();
 			
 			this.level=c_level;
 			this.type=DataType.UNKNOWN;
