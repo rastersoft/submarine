@@ -82,7 +82,8 @@ namespace Submarine {
 						continue;
 					}
 					var uri=MAIN_URI+"/"+rv.substring(pos2+9,pos3-pos2-9);
-					Subtitle subtitle = new Subtitle(this.info, uri);
+					Value v=uri;
+					Subtitle subtitle = new Subtitle(this.info, v);
 					subtitle.language=l;
 					subtitles_downloaded.add(subtitle);
 				}

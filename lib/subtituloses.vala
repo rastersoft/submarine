@@ -10,6 +10,7 @@ namespace Submarine {
 		private const string USER_AGENT = "submarine/0.1";
 
 		private Xml.Node *internal_last_node;
+		private string cookie;
 
 		// http://www.subtitulos.es/search.php?cx=partner-pub-9712736367130269%3A92aabu-f398&cof=FORID%3A10&ie=ISO-8859-1&q=doctor+who+%282005%29+3x10&sa=Buscar&siteurl=www.subtitulos.es%2F&ref=&ss=158j24964j4
 		construct {
@@ -48,14 +49,15 @@ namespace Submarine {
 			return false;
 		}
 		
-		private Xml.Node *find_node(Xml.Node *c_node,string name,string attr_name="",string attr_value="",Xml.Node *last=null,bool first=true) {
+		private Xml.Node *find_node(Xml.Node *c_node,string name,string attr_name="",string attr_value="",Xml.Node *last=null,bool is_first=true) {
 			
-			if(first) {
-				this.internal_last_node=last;
-			}
-			
+
 			if (c_node==null) {
 				return null;
+			}
+			
+			if (is_first) {
+				this.internal_last_node=last;
 			}
 			
 			if ((c_node->name==name)&&(this.internal_last_node==null)) {
@@ -82,6 +84,21 @@ namespace Submarine {
 			}
 			return null;
 		}
+		
+		private string? get_inner_text(Xml.Node *c_node) {
+			
+			if (c_node==null) {
+				return "";
+			}
+			
+			var content="";
+			if (c_node->content!=null) {
+				content+=c_node->content;
+			}
+			content+=this.get_inner_text(c_node->children)+this.get_inner_text(c_node->next);
+
+			return content;
+		}
 	
 		public override Gee.Set<Subtitle> search(File file, Gee.Collection<string> languages) {
 
@@ -100,7 +117,7 @@ namespace Submarine {
 			
 			var parser = new Submarine.NameParser(file);
 			if (parser.title==null) {
-				GLib.stdout.printf("Can't determine the serie/movie title\n");
+				GLib.stdout.printf("Subtitulos.es: Can't determine the serie/movie title\n");
 				return subtitles_downloaded;
 			}
 
@@ -144,6 +161,7 @@ namespace Submarine {
 			}
 
 			Xml.Node *last_node=null;
+			Gee.ArrayList <string> uris=new Gee.ArrayList <string>();
 			while(true) {
 				var current_node=find_node(top_tree,"div","class","links_main links_deep",last_node);
 				if (current_node==null) {
@@ -154,192 +172,170 @@ namespace Submarine {
 				if (link_node==null) {
 					continue;
 				}
-				GLib.stdout.printf("encontrado a href=%s\n",link_node->get_prop("href"));
-			}
-/*
-			while(true) {
+				var text_node=link_node->children;
+				var link_description=this.get_inner_text(text_node);
 				
-				// and check each link
-				pos1=rv.index_of("<div class=\"links_main links_deep\">",pos1);
-				if (pos1<0) {
-					link_uri="";
-					break;
-				}
-				pos1+=35;
-				pos1=rv.index_of("href=\"",pos1);
-				if (pos1<0) {
-					continue;
-				}
-				pos1+=6;
-				var pos2=rv.index_of("\"",pos1);
-				if ((pos1==pos2)||(pos2<0)) {
-					continue;
-				}
-				link_uri=rv.substring(pos1,pos2-pos1);
-				// find the end of the <a href...> tag
-				pos1=rv.index_of(">",pos2);
-				if (pos1<0) {
-					continue;
-				}
-				pos1++;
-				pos2=rv.index_of("</a>",pos1);
-				if ((pos2<0)||(pos1==pos2)) {
-					continue;
-				}
-				// text with the page description. We must remove the HTML tags to be able to parse it
-				var link_description=rv.substring(pos1,pos2-pos1).replace("<b>","").replace("</b>","");
-				
-				// now, let's ensure that this link points to what we are looking for
+				var link_uri=link_node->get_prop("href");
 				
 				if (0!=link_uri.index_of("http://www.subtitulos.es")) {
 					// this is not the page we are looking for
 					continue;
 				}
+				
 				if (-1==link_description.index_of(title)) {
 					// the description doesn't contain the title
 					continue;
 				}
+				
 				if ((seasons!="")&&(-1==link_description.index_of(seasons))) {
 					// the description doesn't contain the season/chapter piece
 					continue;
 				}
 				// If we reached this point, we have in link_uri what seems a good page
-				break;
+				if (false==uris.contains(link_uri)) {
+					uris.add(link_uri);
+				}
 			}
 			
-			GLib.stdout.printf("Pagina: %s\n",link_uri);
+			foreach(var uri in uris) {
+				
+				// get each found URI, to get the subtitles available inside
+				message = Soup.Form.request_new("GET",uri);
+				message.request_headers.append("User-Agent",USER_AGENT);
 			
-/*			string lang;
-			
-			foreach(string l in languages) {
-				if (l.length==3) {
-					lang=l;
-				} else {
-					lang=Submarine.get_alternate(l);
+				status_code = this.session.send_message(message);
+				if (status_code!=200) {
+					continue;
 				}
-
-				int pos_ini=0;
+				
+				
+				this.cookie="";
+				var rsp=message.response_headers;
+				string cadena;
+				HashTable<string,string> params;
+				rsp.foreach(this.MessageHeaders);
+				
+				var pos_semicolon=this.cookie.index_of(";");
+				if (pos_semicolon>0) {
+					this.cookie=this.cookie.substring(0,pos_semicolon);
+				}
+				
+				rv=(string)(message.response_body.data);
+			
+				htmlparser = Html.Doc.read_doc(rv,"");
+				c_node=htmlparser->get_root_element();
+				top_tree=find_node(c_node,"div","id","content");
+				if (top_tree==null) {
+					continue;
+				}
+				top_tree=find_node(c_node,"div","id","version",top_tree);
+				if (top_tree==null) {
+					continue;
+				}
+	
+				last_node=null;
 				while(true) {
-					var pos1=rv.index_of("<td>"+main_filename,pos_ini);
-					if (pos1==-1) {
+					var current_node=find_node(top_tree,"li","class","li-idioma",last_node);
+					if (current_node==null) {
 						break;
 					}
-					pos_ini=pos1+4;
-					var pos2=rv.index_of("<a href=\"",pos1+4);
-					if (pos2==-1) {
+					last_node=current_node;
+					var lengua=this.get_inner_text(current_node->children).replace(" ","").replace("\n","").replace("\r","").replace("\t","");
+					string current_language="";
+					switch(lengua) {
+					case "Español":
+					case "Español(España)":
+					case "Español(Latinoamérica)":
+						current_language="spa";
+					break;
+					case "English":
+						current_language="eng";
+					break;
+					case "Català":
+						current_language="cat";
+					break;
+					case "Galego":
+						current_language="glg";
+					break;
+					case "Portuguese":
+						current_language="por";
+					break;
+					case "Euskera":
+						current_language="baq";
+					break;
+					}
+					if (current_language=="") {
 						continue;
 					}
-					var pos3=rv.index_of("\"",pos2+9);
-					if (pos3==-1) {
+					var first_span=find_node(top_tree,"span","","",last_node);
+					if (first_span==null) {
 						continue;
 					}
-					var uri=MAIN_URI+"/"+rv.substring(pos2+9,pos3-pos2-9);
-					Subtitle subtitle = new Subtitle(this.info, uri);
-					subtitle.language=l;
-					subtitles_downloaded.add(subtitle);
-				}
-			}*/
-			
-			return subtitles_downloaded;
-		}
-
-		bool remove_directory (string path) {
-			
-			bool flag = false;
-			var directory = File.new_for_path (path);
-  
-			var enumerator = directory.enumerate_children (
-				FileAttribute.STANDARD_NAME, 0
-			);
-  
-			FileInfo file_info;
-			while ((file_info = enumerator.next_file ()) != null) {
-				var newpath=GLib.Path.build_filename(path,file_info.get_name());
-				if ((file_info.get_file_type ()) == FileType.DIRECTORY) {
-					if (this.remove_directory(newpath)) {
-						flag=true;
+					var uri_link=find_node(first_span,"a","href");
+					if (uri_link==null) {
+						continue;
 					}
-				}
-				var newfile= File.new_for_path(newpath);
-				if(false==newfile.delete()) {
-					flag=true;
+					foreach(string language in languages) {
+						if (language.length==2) {
+							language=Submarine.get_alternate(language);
+						}
+						if (language==current_language) {
+							Value v=uri_link->get_prop("href");
+							Subtitle subtitle = new Subtitle(this.info, v);
+							subtitle.language=language;
+							//subtitle.data=this.cookie+";"+uri;
+							subtitle.data=uri;
+							subtitles_downloaded.add(subtitle);
+							break;
+						}
+					}
 				}
 			}
-			return flag;
-		}
 
+			return subtitles_downloaded;
+		}
+		
+		public void MessageHeaders (string name, string value) {
+			
+			if (name=="Set-Cookie") {
+				this.cookie=value;
+			}
+			
+		}
+		
 		public override Subtitle? download(Subtitle subtitle) {
 			
 			var message = new Soup.Message("GET","%s".printf(subtitle.server_data.get_string()));
 			message.request_headers.append("User-Agent",USER_AGENT);
+			if(subtitle.data!="") {
+				/*var pos=subtitle.data.index_of(";");
+				message.request_headers.append("Cookie",subtitle.data.substring(0,pos));*/
+				message.request_headers.append("Referer",subtitle.data);//.substring(pos+1));
+			}
+
 			uint status_code = this.session.send_message(message);
 			if (status_code==200) {
-				this.remove_directory("/tmp/submarine");
-				var tmp_path=GLib.File.new_for_path("/tmp/submarine");
-				try {
-					tmp_path.make_directory_with_parents();
-				} catch (Error e) {	
-				}
+				var rsp=message.response_headers;
 				
-				var output_file=GLib.File.new_for_path("/tmp/submarine/data.zip");
-				try {
-					var output_stream = output_file.create(GLib.FileCreateFlags.NONE);
-					var file_data=message.response_body.data;
-					output_stream.write(file_data);
-					output_stream.close();
-				} catch (Error e) {
-					this.remove_directory("/tmp/submarine");
-					return null;
-				}
+				string type="";
 				
-				Posix.system("unzip /tmp/submarine/data.zip -d /tmp/submarine/");
-				try {
-					output_file.delete();
-				} catch (Error e) {
+				string cadena;
+				HashTable<string,string> params;
+				if(rsp.get_content_disposition(out cadena, out params)) {
+					var lista=params.get_keys();
+					foreach(string entrada in lista) {
+						if (entrada=="filename") {
+							var valor=params[entrada];
+							type = valor.substring(valor.last_index_of(".")+1);
+						}
+					}
 				}
-				
-				var directory = File.new_for_path ("/tmp/submarine");
-				var enumerator = directory.enumerate_children (
-					FileAttribute.STANDARD_NAME+","+FileAttribute.STANDARD_SIZE, 0
-				);
-  
-				FileInfo file_info;
-				string ext1="srt".casefold();
-				string ext2="sub".casefold();
-				while ((file_info = enumerator.next_file ()) != null) {
-					string tmp=file_info.get_name();
-					var pos = tmp.last_index_of(".");
-					var ext=tmp.substring(pos+1).casefold();
-					if ((ext!=ext1)&&(ext!=ext2)) {
-						continue;
-					}
-					var newpath=GLib.Path.build_filename("/tmp/submarine",tmp);
-					
-					uint8[] buffer=new uint8[file_info.get_size()];
-					
-					try {
-						var input_stream=GLib.File.new_for_path(newpath).read();
-						input_stream.read(buffer);
-						input_stream.close();
-					} catch (Error e) {
-						this.remove_directory("/tmp/submarine");
-						return null;
-					}
-					subtitle.data=(string)(buffer);
-					if (ext==ext1) {
-						subtitle.format="srt";
-					} else {
-						subtitle.format="sub";
-					}
-					break;
-				}
-				this.remove_directory("/tmp/submarine");
+				subtitle.format=type;
+				subtitle.data=(string)(message.response_body.data);
 				return (subtitle);
 			}
-			this.remove_directory("/tmp/submarine");
 			return null;
-		}
-		
+		}	
 	}
 	
 }
