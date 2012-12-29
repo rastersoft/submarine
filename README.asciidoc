@@ -113,3 +113,4 @@ This program is based on the following online subtitle services:
 - *BierDopje.com* (http://bierdopje.com)
 - *SubDB* (http://thesubdb.com)
 - *DivXsubs* (http://divxsubs.com)
+- *Subtitulos.es* (http://www.subtitulos.es)
