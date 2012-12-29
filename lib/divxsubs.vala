@@ -31,9 +31,6 @@ namespace Submarine {
 	
 		public override Gee.Set<Subtitle> search(File file, Gee.Collection<string> languages) {
 
-			string showid="X";
-			string tvdbid="X";
-
 			var subtitles_downloaded = new Gee.HashSet<Subtitle>();
 
 			this.filepath=file.get_path();
@@ -41,8 +38,6 @@ namespace Submarine {
 			var tmp=file.get_basename();
 			var pos = tmp.last_index_of(".");
 			var main_filename=tmp.substring(0,pos);
-			
-			Subtitle ? retval;
 			
 			string lang;
 			

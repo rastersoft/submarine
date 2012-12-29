@@ -10,9 +10,7 @@ namespace Submarine {
 		private const string USER_AGENT = "submarine/0.1";
 
 		private Xml.Node *internal_last_node;
-		private string cookie;
 
-		// http://www.subtitulos.es/search.php?cx=partner-pub-9712736367130269%3A92aabu-f398&cof=FORID%3A10&ie=ISO-8859-1&q=doctor+who+%282005%29+3x10&sa=Buscar&siteurl=www.subtitulos.es%2F&ref=&ss=158j24964j4
 		construct {
 			this.info = ServerInfo("Subtitulos.es",
 					"http://www.subtitulos.es",
@@ -102,19 +100,10 @@ namespace Submarine {
 	
 		public override Gee.Set<Subtitle> search(File file, Gee.Collection<string> languages) {
 
-			string showid="X";
-			string tvdbid="X";
-
 			var subtitles_downloaded = new Gee.HashSet<Subtitle>();
 
 			this.filepath=file.get_path();
 
-			var tmp=file.get_basename();
-			var pos = tmp.last_index_of(".");
-			var main_filename=tmp.substring(0,pos);
-			
-			Subtitle ? retval;
-			
 			var parser = new Submarine.NameParser(file);
 			if (parser.title==null) {
 				GLib.stdout.printf("Subtitulos.es: Can't determine the serie/movie title\n");
@@ -207,19 +196,7 @@ namespace Submarine {
 				if (status_code!=200) {
 					continue;
 				}
-				
-				
-				this.cookie="";
-				var rsp=message.response_headers;
-				string cadena;
-				HashTable<string,string> params;
-				rsp.foreach(this.MessageHeaders);
-				
-				var pos_semicolon=this.cookie.index_of(";");
-				if (pos_semicolon>0) {
-					this.cookie=this.cookie.substring(0,pos_semicolon);
-				}
-				
+
 				rv=(string)(message.response_body.data);
 			
 				htmlparser = Html.Doc.read_doc(rv,"");
@@ -283,7 +260,6 @@ namespace Submarine {
 							Value v=uri_link->get_prop("href");
 							Subtitle subtitle = new Subtitle(this.info, v);
 							subtitle.language=language;
-							//subtitle.data=this.cookie+";"+uri;
 							subtitle.data=uri;
 							subtitles_downloaded.add(subtitle);
 							break;
@@ -293,14 +269,6 @@ namespace Submarine {
 			}
 
 			return subtitles_downloaded;
-		}
-		
-		public void MessageHeaders (string name, string value) {
-			
-			if (name=="Set-Cookie") {
-				this.cookie=value;
-			}
-			
 		}
 		
 		public override Subtitle? download(Subtitle subtitle) {
