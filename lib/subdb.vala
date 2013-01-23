@@ -86,6 +86,7 @@ namespace Submarine {
 					if (languages.contains(sub)) {
 						Subtitle subtitle = new Subtitle(this.info, v);
 						subtitle.language=sub;
+						subtitle.rating=9.0; // maximum, because it is found with hash
 						subtitles_downloaded.add(subtitle);
 					}
 				}

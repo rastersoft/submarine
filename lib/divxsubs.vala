@@ -80,6 +80,7 @@ namespace Submarine {
 					Value v=uri;
 					Subtitle subtitle = new Subtitle(this.info, v);
 					subtitle.language=l;
+					subtitle.rating=8.0; // near maximum, because it is found with a search engine
 					subtitles_downloaded.add(subtitle);
 				}
 			}

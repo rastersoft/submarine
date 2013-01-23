@@ -7,6 +7,7 @@ namespace Submarine {
 		
 		private string filepath;
 		private const string MAIN_URI = "http://duckduckgo.com/html";
+		private const string SECD_URI = "http://www.subtitulos.es";
 		private const string USER_AGENT = "submarine/0.1";
 
 		private Xml.Node *internal_last_node;
@@ -113,6 +114,8 @@ namespace Submarine {
 			string title;
 			string title_full;
 			string seasons;
+
+			bool found=false;
 			
 			if(parser.year!=-1) {
 				title="%s (%d)".printf(parser.title,parser.year);
@@ -189,86 +192,107 @@ namespace Submarine {
 			foreach(var uri in uris) {
 				
 				// get each found URI, to get the subtitles available inside
-				message = Soup.Form.request_new("GET",uri);
-				message.request_headers.append("User-Agent",USER_AGENT);
-			
-				status_code = this.session.send_message(message);
-				if (status_code!=200) {
-					continue;
-				}
-
-				rv=(string)(message.response_body.data);
-			
-				htmlparser = Html.Doc.read_doc(rv,"");
-				c_node=htmlparser->get_root_element();
-				top_tree=find_node(c_node,"div","id","content");
-				if (top_tree==null) {
-					continue;
-				}
-				top_tree=find_node(c_node,"div","id","version",top_tree);
-				if (top_tree==null) {
-					continue;
-				}
-	
-				last_node=null;
-				while(true) {
-					var current_node=find_node(top_tree,"li","class","li-idioma",last_node);
-					if (current_node==null) {
-						break;
-					}
-					last_node=current_node;
-					var lengua=this.get_inner_text(current_node->children).replace(" ","").replace("\n","").replace("\r","").replace("\t","");
-					string current_language="";
-					switch(lengua) {
-					case "Español":
-					case "Español(España)":
-					case "Español(Latinoamérica)":
-						current_language="spa";
-					break;
-					case "English":
-						current_language="eng";
-					break;
-					case "Català":
-						current_language="cat";
-					break;
-					case "Galego":
-						current_language="glg";
-					break;
-					case "Portuguese":
-						current_language="por";
-					break;
-					case "Euskera":
-						current_language="baq";
-					break;
-					}
-					if (current_language=="") {
-						continue;
-					}
-					var first_span=find_node(top_tree,"span","","",last_node);
-					if (first_span==null) {
-						continue;
-					}
-					var uri_link=find_node(first_span,"a","href");
-					if (uri_link==null) {
-						continue;
-					}
-					foreach(string language in languages) {
-						if (language.length==2) {
-							language=Submarine.get_alternate(language);
-						}
-						if (language==current_language) {
-							Value v=uri_link->get_prop("href");
-							Subtitle subtitle = new Subtitle(this.info, v);
-							subtitle.language=language;
-							subtitle.data=uri;
-							subtitles_downloaded.add(subtitle);
-							break;
-						}
-					}
+				
+				if (this.extract_subtitles(uri,languages,subtitles_downloaded,8.0)) {
+					found=true;
 				}
 			}
 
+			if (found==false) {
+				/* No subtitles found in DuckDuck Go. It can be because they aren't still indexed,
+				   so let's try directly; but give them less rating */
+				   
+				   var uri=SECD_URI+"/"+title.replace(" ","-")+"/"+seasons;
+				   this.extract_subtitles(uri,languages,subtitles_downloaded,7.0);
+			}
+
 			return subtitles_downloaded;
+		}
+		
+		private bool extract_subtitles(string uri, Gee.Collection<string> languages, Gee.Set<Subtitle> subtitles_downloaded, double rating) {
+		
+			var message = Soup.Form.request_new("GET",uri);
+			message.request_headers.append("User-Agent",USER_AGENT);
+		
+			var status_code = this.session.send_message(message);
+			if (status_code!=200) {
+				return false;
+			}
+
+			var rv=(string)(message.response_body.data);
+		
+			var htmlparser = Html.Doc.read_doc(rv,"");
+			var c_node=htmlparser->get_root_element();
+			var top_tree=find_node(c_node,"div","id","content");
+			if (top_tree==null) {
+				return false;
+			}
+			top_tree=find_node(c_node,"div","id","version",top_tree);
+			if (top_tree==null) {
+				return false;
+			}
+
+			bool found=false;
+			Xml.Node *last_node=null;
+			while(true) {
+				var current_node=find_node(top_tree,"li","class","li-idioma",last_node);
+				if (current_node==null) {
+					break;
+				}
+				last_node=current_node;
+				var lengua=this.get_inner_text(current_node->children).replace(" ","").replace("\n","").replace("\r","").replace("\t","");
+				string current_language="";
+				switch(lengua) {
+				case "Español":
+				case "Español(España)":
+				case "Español(Latinoamérica)":
+					current_language="spa";
+				break;
+				case "English":
+					current_language="eng";
+				break;
+				case "Català":
+					current_language="cat";
+				break;
+				case "Galego":
+					current_language="glg";
+				break;
+				case "Portuguese":
+					current_language="por";
+				break;
+				case "Euskera":
+					current_language="baq";
+				break;
+				}
+				if (current_language=="") {
+					continue;
+				}
+				var first_span=find_node(top_tree,"span","","",last_node);
+				if (first_span==null) {
+					continue;
+				}
+				var uri_link=find_node(first_span,"a","href");
+				if (uri_link==null) {
+					continue;
+				}
+				foreach(string language in languages) {
+					if (language.length==2) {
+						language=Submarine.get_alternate(language);
+					}
+					if (language==current_language) {
+						Value v=uri_link->get_prop("href");
+						Subtitle subtitle = new Subtitle(this.info, v);
+						subtitle.language=language;
+						subtitle.data=uri;
+						subtitle.rating=rating;
+						subtitles_downloaded.add(subtitle);
+						found=true;
+						break;
+					}
+				}
+			}
+			return (found);
+		
 		}
 		
 		public override Subtitle? download(Subtitle subtitle) {
@@ -276,9 +300,7 @@ namespace Submarine {
 			var message = new Soup.Message("GET","%s".printf(subtitle.server_data.get_string()));
 			message.request_headers.append("User-Agent",USER_AGENT);
 			if(subtitle.data!="") {
-				/*var pos=subtitle.data.index_of(";");
-				message.request_headers.append("Cookie",subtitle.data.substring(0,pos));*/
-				message.request_headers.append("Referer",subtitle.data);//.substring(pos+1));
+				message.request_headers.append("Referer",subtitle.data);
 			}
 
 			uint status_code = this.session.send_message(message);

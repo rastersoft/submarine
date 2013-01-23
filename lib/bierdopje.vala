@@ -141,6 +141,7 @@ namespace Submarine {
 										Value v = c_uri;
 										Subtitle subtitle = new Subtitle(this.info, v);
 										subtitle.language=l;
+										subtitle.rating=7.0; // medium, because we are guessing the file name
 										subtitles_downloaded.add(subtitle);
 									}
 								}
