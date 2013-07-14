@@ -1,10 +1,10 @@
 using Posix;
-	
+
 namespace Submarine {
-	
+
 	private class SubtitulosESServer : SubtitleServer {
 		private Soup.SessionSync session;
-		
+
 		private string filepath;
 		private const string MAIN_URI = "http://duckduckgo.com/html";
 		private const string SECD_URI = "http://www.subtitulos.es";
@@ -19,23 +19,23 @@ namespace Submarine {
 
 			filepath="";
 		}
-		
+
 		public override bool connect() {
-			
+
 			this.session = new Soup.SessionSync();
-			
+
 			return true;
 		}
-		
+
 		public override void disconnect() {
-			
+
 		}
-		
+
 		private bool check_attribute(Xml.Node *c_node,string attr_name,string attr_value) {
 			if (attr_name=="") {
 				return true;
 			}
-			
+
 			var prop=c_node->has_prop(attr_name);
 			if (null!=prop) {
 				if (attr_value=="") {
@@ -47,28 +47,28 @@ namespace Submarine {
 			}
 			return false;
 		}
-		
+
 		private Xml.Node *find_node(Xml.Node *c_node,string name,string attr_name="",string attr_value="",Xml.Node *last=null,bool is_first=true) {
-			
+
 
 			if (c_node==null) {
 				return null;
 			}
-			
+
 			if (is_first) {
 				this.internal_last_node=last;
 			}
-			
+
 			if ((c_node->name==name)&&(this.internal_last_node==null)) {
 				if (this.check_attribute(c_node,attr_name,attr_value)) {
 					return c_node;
 				}
 			}
-			
+
 			if (c_node==this.internal_last_node) {
 				this.internal_last_node=null;
 			}
-			
+
 			if (c_node->children!=null) {
 				var rv=this.find_node(c_node->children,name,attr_name,attr_value,null,false);
 				if (rv!=null) {
@@ -83,13 +83,13 @@ namespace Submarine {
 			}
 			return null;
 		}
-		
+
 		private string? get_inner_text(Xml.Node *c_node) {
-			
+
 			if (c_node==null) {
 				return "";
 			}
-			
+
 			var content="";
 			if (c_node->content!=null) {
 				content+=c_node->content;
@@ -98,7 +98,7 @@ namespace Submarine {
 
 			return content;
 		}
-	
+
 		public override Gee.Set<Subtitle> search(File file, Gee.Collection<string> languages) {
 
 			var subtitles_downloaded = new Gee.HashSet<Subtitle>();
@@ -116,13 +116,13 @@ namespace Submarine {
 			string seasons;
 
 			bool found=false;
-			
+
 			if(parser.year!=-1) {
 				title="%s (%d)".printf(parser.title,parser.year);
 			} else {
 				title="%s".printf(parser.title);
 			}
-			
+
 			if ((parser.season!=-1)&&(parser.chapter!=-1)) {
 				seasons="%dx%02d".printf(parser.season,parser.chapter);
 				title_full="%s %s".printf(title,seasons);
@@ -130,24 +130,24 @@ namespace Submarine {
 				seasons="";
 				title_full=title;
 			}
-			
+
 			GLib.stdout.printf("Subtitulos.es: searching for %s\n",title_full);
-			
+
 			// since Google encripts and proccesses the searchs with javascript, we must use another one. Duck Duck Go in this case
 			var message = Soup.Form.request_new("GET",MAIN_URI,"q",title_full+" site:www.subtitulos.es");
 			message.request_headers.append("User-Agent",USER_AGENT);
-			
+
 			var status_code = this.session.send_message(message);
 			if (status_code!=200) {
 				return subtitles_downloaded;
 			}
-				
+
 			var rv=(string)(message.response_body.data);
-			
+
 			var htmlparser = Html.Doc.read_doc(rv,"");
 			var c_node=htmlparser->get_root_element();
 			var top_tree=find_node(c_node,"div","id","links");
-			
+
 			if (top_tree==null) {
 				return subtitles_downloaded;
 			}
@@ -166,19 +166,19 @@ namespace Submarine {
 				}
 				var text_node=link_node->children;
 				var link_description=this.get_inner_text(text_node);
-				
+
 				var link_uri=link_node->get_prop("href");
-				
+
 				if (0!=link_uri.index_of("http://www.subtitulos.es")) {
 					// this is not the page we are looking for
 					continue;
 				}
-				
+
 				if (-1==link_description.index_of(title)) {
 					// the description doesn't contain the title
 					continue;
 				}
-				
+
 				if ((seasons!="")&&(-1==link_description.index_of(seasons))) {
 					// the description doesn't contain the season/chapter piece
 					continue;
@@ -188,11 +188,11 @@ namespace Submarine {
 					uris.add(link_uri);
 				}
 			}
-			
+
 			foreach(var uri in uris) {
-				
+
 				// get each found URI, to get the subtitles available inside
-				
+
 				if (this.extract_subtitles(uri,languages,subtitles_downloaded,8.0)) {
 					found=true;
 				}
@@ -201,26 +201,26 @@ namespace Submarine {
 			if (found==false) {
 				/* No subtitles found in DuckDuck Go. It can be because they aren't still indexed,
 				   so let's try directly; but give them less rating */
-				   
+
 				   var uri=SECD_URI+"/"+title.replace(" ","-")+"/"+seasons;
 				   this.extract_subtitles(uri,languages,subtitles_downloaded,7.0);
 			}
 
 			return subtitles_downloaded;
 		}
-		
+
 		private bool extract_subtitles(string uri, Gee.Collection<string> languages, Gee.Set<Subtitle> subtitles_downloaded, double rating) {
-		
+
 			var message = Soup.Form.request_new("GET",uri);
 			message.request_headers.append("User-Agent",USER_AGENT);
-		
+
 			var status_code = this.session.send_message(message);
 			if (status_code!=200) {
 				return false;
 			}
 
 			var rv=(string)(message.response_body.data);
-		
+
 			var htmlparser = Html.Doc.read_doc(rv,"");
 			var c_node=htmlparser->get_root_element();
 			var top_tree=find_node(c_node,"div","id","content");
@@ -292,11 +292,11 @@ namespace Submarine {
 				}
 			}
 			return (found);
-		
+
 		}
-		
+
 		public override Subtitle? download(Subtitle subtitle) {
-			
+
 			var message = new Soup.Message("GET","%s".printf(subtitle.server_data.get_string()));
 			message.request_headers.append("User-Agent",USER_AGENT);
 			if(subtitle.data!="") {
@@ -306,9 +306,9 @@ namespace Submarine {
 			uint status_code = this.session.send_message(message);
 			if (status_code==200) {
 				var rsp=message.response_headers;
-				
+
 				string type="";
-				
+
 				string cadena;
 				HashTable<string,string> params;
 				if(rsp.get_content_disposition(out cadena, out params)) {
@@ -320,12 +320,16 @@ namespace Submarine {
 						}
 					}
 				}
-				subtitle.format=type;
-				subtitle.data=(string)(message.response_body.data);
-				return (subtitle);
+				if ((type.casefold()=="sub".casefold())||(type.casefold()=="srt".casefold())) {
+					subtitle.format=type;
+					subtitle.data=(string)(message.response_body.data);
+					return (subtitle);
+				} else {
+					return null;
+				}
 			}
 			return null;
-		}	
+		}
 	}
-	
+
 }

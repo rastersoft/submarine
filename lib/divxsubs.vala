@@ -1,14 +1,14 @@
 using Posix;
-	
+
 namespace Submarine {
-	
+
 	private class DivXsubsServer : SubtitleServer {
 		private Soup.SessionSync session;
-		
+
 		private string filepath;
 		private const string MAIN_URI = "http://www.divxsubs.com";
 		private const string USER_AGENT = "submarine/0.1";
-		
+
 		construct {
 			this.info = ServerInfo("DivXsubs",
 					"http://www.divxsubs.com",
@@ -16,19 +16,19 @@ namespace Submarine {
 
 			filepath="";
 		}
-		
+
 		public override bool connect() {
-			
+
 			this.session = new Soup.SessionSync();
-			
+
 			return true;
 		}
-		
+
 		public override void disconnect() {
-			
+
 		}
-		
-	
+
+
 		public override Gee.Set<Subtitle> search(File file, Gee.Collection<string> languages) {
 
 			var subtitles_downloaded = new Gee.HashSet<Subtitle>();
@@ -38,16 +38,16 @@ namespace Submarine {
 			var tmp=file.get_basename();
 			var pos = tmp.last_index_of(".");
 			var main_filename=tmp.substring(0,pos);
-			
+
 			string lang;
-			
+
 			foreach(string l in languages) {
 				if (l.length==3) {
 					lang=l;
 				} else {
 					lang=Submarine.get_alternate(l);
 				}
-				
+
 				var message = Soup.Form.request_new("POST",MAIN_URI+"/results.php","keyword",main_filename,"country",lang,"x","106","y","11");
 				message.request_headers.append("User-Agent",USER_AGENT);
 				message.request_headers.append("Accept-Language","es-ES,es;q=0.8,en-US;q=0.5,en;q=0.3");
@@ -58,9 +58,9 @@ namespace Submarine {
 				if (status_code!=200) {
 					continue;
 				}
-				
+
 				var rv=(string)(message.response_body.data);
-				
+
 				int pos_ini=0;
 				while(true) {
 					var pos1=rv.index_of("<td>"+main_filename,pos_ini);
@@ -84,12 +84,12 @@ namespace Submarine {
 					subtitles_downloaded.add(subtitle);
 				}
 			}
-			
+
 			return subtitles_downloaded;
 		}
 
 		bool remove_directory (string path) {
-			
+
 			bool flag = false;
 			var directory = File.new_for_path (path);
   
@@ -114,7 +114,7 @@ namespace Submarine {
 		}
 
 		public override Subtitle? download(Subtitle subtitle) {
-			
+
 			var message = new Soup.Message("GET","%s".printf(subtitle.server_data.get_string()));
 			message.request_headers.append("User-Agent",USER_AGENT);
 			uint status_code = this.session.send_message(message);
@@ -123,9 +123,9 @@ namespace Submarine {
 				var tmp_path=GLib.File.new_for_path("/tmp/submarine");
 				try {
 					tmp_path.make_directory_with_parents();
-				} catch (Error e) {	
+				} catch (Error e) {
 				}
-				
+
 				var output_file=GLib.File.new_for_path("/tmp/submarine/data.zip");
 				try {
 					var output_stream = output_file.create(GLib.FileCreateFlags.NONE);
@@ -136,13 +136,13 @@ namespace Submarine {
 					this.remove_directory("/tmp/submarine");
 					return null;
 				}
-				
+
 				Posix.system("unzip /tmp/submarine/data.zip -d /tmp/submarine/");
 				try {
 					output_file.delete();
 				} catch (Error e) {
 				}
-				
+
 				var directory = File.new_for_path ("/tmp/submarine");
 				var enumerator = directory.enumerate_children (
 					FileAttribute.STANDARD_NAME+","+FileAttribute.STANDARD_SIZE, 0
@@ -151,6 +151,7 @@ namespace Submarine {
 				FileInfo file_info;
 				string ext1="srt".casefold();
 				string ext2="sub".casefold();
+				bool found=false;
 				while ((file_info = enumerator.next_file ()) != null) {
 					string tmp=file_info.get_name();
 					var pos = tmp.last_index_of(".");
@@ -159,9 +160,9 @@ namespace Submarine {
 						continue;
 					}
 					var newpath=GLib.Path.build_filename("/tmp/submarine",tmp);
-					
+
 					uint8[] buffer=new uint8[file_info.get_size()];
-					
+
 					try {
 						var input_stream=GLib.File.new_for_path(newpath).read();
 						input_stream.read(buffer);
@@ -176,15 +177,18 @@ namespace Submarine {
 					} else {
 						subtitle.format="sub";
 					}
+					found=true;
 					break;
 				}
 				this.remove_directory("/tmp/submarine");
-				return (subtitle);
+				if (found) {
+					return (subtitle);
+				} else {
+					return null;
+				}
 			}
 			this.remove_directory("/tmp/submarine");
 			return null;
 		}
-		
 	}
-	
 }

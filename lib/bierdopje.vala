@@ -1,34 +1,34 @@
 namespace Submarine {
-	
+
 	private class BierdopjeServer : SubtitleServer {
 		private Soup.SessionSync session;
-		
+
 		// Key for Submarine. Don't use it on other programs
 		// Thanks to BierDopje manager, and sorry for double posting O:)
 		private const string XMLRPC_URI = "http://api.bierdopje.com/79FD9171317EC74E/";
 		private const string USER_AGENT = "submarine/0.1";
-		
+
 		private string filepath;
-		
+
 		construct {
 			this.info = ServerInfo("Bierdopje",
 					"http://www.bierdopje.com",
 					"bd");
-					
+
 			filepath="";
 		}
-		
+
 		public override bool connect() {
-			
+
 			this.session = new Soup.SessionSync();
-			
+
 			return true;
 		}
-		
+
 		public override void disconnect() {
-			
+
 		}
-		
+
 		public override Gee.Set<Subtitle> search(File file, Gee.Collection<string> languages) {
 
 			string showid="X";
@@ -41,13 +41,13 @@ namespace Submarine {
 			var tmp=file.get_basename();
 			var pos = tmp.last_index_of(".");
 			var main_filename=tmp.substring(0,pos);
-			
+
 			var parser = new Submarine.NameParser(file);
 			if (parser.title==null) {
 				stdout.printf("Can't determine the serie/movie title\n");
 				return subtitles_downloaded;
 			}
-			
+
 			var cache = new CacheData("submarine_bierdopje",1);
 			string title;
 			if(parser.year!=-1) {
@@ -70,7 +70,7 @@ namespace Submarine {
 					get_keys=true;
 				}
 			}
-	
+
 			if (get_keys) {
 				var petition="%sGetShowByName/%s".printf(XMLRPC_URI,title);
 				var message = new Soup.Message("GET",petition);
@@ -81,13 +81,13 @@ namespace Submarine {
 					var rv=(string)(message.response_body.data);
 					var x = Xml.Parser.parse_memory(rv,rv.length);
 					var node=x->get_root_element();
-					
+
 					var node2=this.find_xml_content("status",node);
 					if ((node2!=null)&&(node2->children!=null)&&(node2->children->content=="true")) {
-						
+
 						var node3=this.find_xml_content("showid",node);
 						var node4=this.find_xml_content("tvdbid",node);
-						
+
 						if ((node3!=null)&&(node3->children!=null)) {
 							showid=node3->children->content;
 						}
@@ -102,7 +102,7 @@ namespace Submarine {
 					return subtitles_downloaded;
 				}
 			}
-			
+
 			foreach(string l in languages) {
 				var petition="%sGetAllSubsFor/%s/%d/%d/%s".printf(XMLRPC_URI,showid,parser.season,parser.chapter,l);
 				var message = new Soup.Message("GET",petition);
@@ -185,13 +185,13 @@ namespace Submarine {
 						}
 					}
 				}
-			}		
+			}
 			return subtitles_downloaded;
 		}
 
 		private Xml.Node* find_xml_content(string content, Xml.Node *node) {
 			Xml.Node *tmp;
-			
+
 			if (node->name==content) {
 				return node;
 			}
@@ -210,17 +210,17 @@ namespace Submarine {
 			return null;
 		}
 
-						
+
 		public override Subtitle? download(Subtitle subtitle) {
-			
+
 			var message = new Soup.Message("GET","%s".printf(subtitle.server_data.get_string()));
 			message.request_headers.append("User-Agent",USER_AGENT);
 			uint status_code = this.session.send_message(message);
 			if (status_code==200) {
 				var rsp=message.response_headers;
-				
+
 				string type="";
-				
+
 				string cadena;
 				HashTable<string,string> params;
 				if(rsp.get_content_disposition(out cadena, out params)) {
@@ -232,13 +232,13 @@ namespace Submarine {
 						}
 					}
 				}
-				subtitle.format=type;
-				subtitle.data=(string)(message.response_body.data);
-				return (subtitle);
+				if ((type.casefold()=="sub".casefold())||(type.casefold()=="srt".casefold())) {
+					subtitle.format=type;
+					subtitle.data=(string)(message.response_body.data);
+					return (subtitle);
+				}
 			}
 			return null;
 		}
-		
 	}
-	
 }
