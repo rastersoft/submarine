@@ -35,10 +35,15 @@ namespace Submarine {
 			//get filesize and add it to hash
 			size = this.file_size(file);
 
+			stdout.printf("Tamano: %lld\n",size);
+
+			if (size<131072) {
+				return ""; // the file is too small
+			}
+
 			//add first 64kB of file to hash
 			var dis = new DataInputStream(file.read());
 			dis.read(buffer1);
-
 			//add last 64kB of file to hash
 			dis = new DataInputStream(file.read());
 			dis.skip((size_t)(size - 65536));

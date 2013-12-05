@@ -1,0 +1,42 @@
+### AutoVala Project ###
+autovala_version: 7
+project_name: submarine
+vala_version: 0.20
+
+vala_binary: src/submarine
+vala_local_package: Submarine
+*vala_check_package: gee-1.0
+*vala_check_package: gio-2.0
+*vala_check_package: glib-2.0
+*vala_source: report.vala
+*vala_source: submarine.vala
+
+vala_library: src/lib/Submarine
+*namespace: Submarine
+*vala_package: posix
+*vala_check_package: gee-1.0
+*vala_check_package: gio-2.0
+*vala_check_package: glib-2.0
+*vala_check_package: libarchive
+*vala_check_package: libsoup-2.4
+*vala_check_package: libxml-2.0
+*vala_source: XMLRPC.vala
+*vala_source: bierdopje.vala
+*vala_source: cachedata.vala
+*vala_source: divxsubs.vala
+*vala_source: language_codes.vala
+*vala_source: nameparser.vala
+*vala_source: open_subtitles.vala
+*vala_source: podnapisi.vala
+*vala_source: server.vala
+*vala_source: session.vala
+*vala_source: subdb.vala
+*vala_source: subtitle.vala
+*vala_source: subtituloses.vala
+
+*po: po
+
+*data: data/local
+
+*doc: doc
+

@@ -1,3 +1,7 @@
+Version 0.1.8:
+	- Migration to Autovala
+	- Now doesn't fail if the file received from subdb is smaller than 128Kbytes
+
 Version 0.1.7:
 	- Subtitulos.es support implemented
 

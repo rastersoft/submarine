@@ -1,3 +1,5 @@
+using Soup;
+
 namespace Submarine {
 	
 	private class XMLRPC {

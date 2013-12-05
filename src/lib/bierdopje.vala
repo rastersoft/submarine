@@ -1,3 +1,6 @@
+using GLib;
+using Xml;
+
 namespace Submarine {
 
 	private class BierdopjeServer : SubtitleServer {
@@ -222,7 +225,7 @@ namespace Submarine {
 				string type="";
 
 				string cadena;
-				HashTable<string,string> params;
+				GLib.HashTable<string,string> params;
 				if(rsp.get_content_disposition(out cadena, out params)) {
 					var lista=params.get_keys();
 					foreach(string entrada in lista) {

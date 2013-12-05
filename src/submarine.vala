@@ -1,4 +1,9 @@
+using GLib;
+using Gee;
+// using GIO
+
 private class SubmarineConsole : Object {
+
 	private enum ExitValue {
 		OK = 0,
 		PROGRAM_ERROR = 1,
@@ -30,8 +35,8 @@ private class SubmarineConsole : Object {
 		{ null }
 	};
 	
-	private const string name = Config.PACKAGE_NAME;
-	private const string version = Config.PACKAGE_VERSION;
+	private const string name = Constants.RELEASE_NAME;
+	private const string version = Constants.VERSION;
 	
 	private static Gee.Set<string> filenames;
 	private static Gee.MultiMap<string, string> existing_subtitles;

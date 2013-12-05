@@ -1,4 +1,6 @@
+using GLib;
 using Posix;
+using Xml;
 
 namespace Submarine {
 
@@ -310,7 +312,7 @@ namespace Submarine {
 				string type="";
 
 				string cadena;
-				HashTable<string,string> params;
+				GLib.HashTable<string,string> params;
 				if(rsp.get_content_disposition(out cadena, out params)) {
 					var lista=params.get_keys();
 					foreach(string entrada in lista) {
