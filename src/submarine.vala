@@ -2,6 +2,8 @@ using GLib;
 using Gee;
 // using GIO
 
+// project version = 0.14
+
 private class SubmarineConsole : Object {
 
 	private enum ExitValue {

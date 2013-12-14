@@ -1,6 +1,8 @@
 SUBMARINE
 =========
 
+Current version: 0.14
+
 Submarine is a program that searchs subtitles for a file in several subtitle pages.
 
 Currently it searchs in:

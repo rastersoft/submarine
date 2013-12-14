@@ -52,7 +52,7 @@ namespace Submarine {
 				message.request_headers.append("User-Agent",USER_AGENT);
 				message.request_headers.append("Accept-Language","es-ES,es;q=0.8,en-US;q=0.5,en;q=0.3");
 				message.request_headers.append("Referer",MAIN_URI);
-				message.request_headers.append("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+				message.request_headers.append("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"); /**/
 
 				var status_code = this.session.send_message(message);
 				if (status_code!=200) {
@@ -92,6 +92,9 @@ namespace Submarine {
 
 			bool flag = false;
 			var directory = File.new_for_path (path);
+			if (directory.query_exists()==false) {
+				return false;
+			}
   
 			var enumerator = directory.enumerate_children (
 				FileAttribute.STANDARD_NAME, 0
