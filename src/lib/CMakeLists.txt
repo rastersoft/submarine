@@ -23,7 +23,7 @@ ensure_vala_version ("0.22" MINIMUM)
 include (ValaPrecompile)
 
 set (VALA_PACKAGES ${VALA_PACKAGES} posix)
-set (VALA_PACKAGES ${VALA_PACKAGES} gee-1.0)
+set (VALA_PACKAGES ${VALA_PACKAGES} gee-0.8)
 set (VALA_PACKAGES ${VALA_PACKAGES} gio-2.0)
 set (VALA_PACKAGES ${VALA_PACKAGES} glib-2.0)
 set (VALA_PACKAGES ${VALA_PACKAGES} gobject-2.0)
