@@ -109,7 +109,7 @@ namespace Submarine {
 
 			var parser = new Submarine.NameParser(file);
 			if (parser.title==null) {
-				GLib.stdout.printf("Subtitulos.es: Can't determine the serie/movie title\n");
+				GLib.stderr.printf("Subtitulos.es: Can't determine the serie/movie title\n");
 				return subtitles_downloaded;
 			}
 
@@ -133,7 +133,7 @@ namespace Submarine {
 				title_full=title;
 			}
 
-			GLib.stdout.printf("Subtitulos.es: searching for %s\n",title_full);
+			GLib.stderr.printf("Subtitulos.es: searching for %s\n",title_full);
 
 			// since Google encripts and proccesses the searchs with javascript, we must use another one. Duck Duck Go in this case
 			var message = Soup.Form.request_new("GET",MAIN_URI,"q",title_full+" site:www.subtitulos.es");

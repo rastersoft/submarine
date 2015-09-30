@@ -18,14 +18,12 @@ namespace Submarine {
 		}
 
 		private uint64 file_size(File file) throws Error {
-			stdout.printf("file_size\n");
 			var file_info = file.query_info("*", FileQueryInfoFlags.NONE);
 			return file_info.get_size();
 		}
 
 		private string file_hash(File file) throws Error,IOError {
 
-			stdout.printf("file_hash\n");
 			string final_hash;
 			uint64 size;
 
@@ -34,8 +32,6 @@ namespace Submarine {
 
 			//get filesize and add it to hash
 			size = this.file_size(file);
-
-			stdout.printf("Tamano: %lld\n",size);
 
 			if (size<131072) {
 				return ""; // the file is too small
@@ -91,7 +87,7 @@ namespace Submarine {
 					if (languages.contains(sub)) {
 						Subtitle subtitle = new Subtitle(this.info, v);
 						subtitle.language=sub;
-						subtitle.rating=9.0; // maximum, because it is found with hash
+						subtitle.rating=9.9; // maximum, because it is found with hash
 						subtitles_downloaded.add(subtitle);
 					}
 				}

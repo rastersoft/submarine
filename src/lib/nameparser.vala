@@ -129,7 +129,7 @@ namespace Submarine {
 					break;
 				}
 			} else {
-				stdout.printf("Copiando NULL\n");
+				stderr.printf("Copiando NULL\n");
 			}
 		}
 		
@@ -270,7 +270,7 @@ namespace Submarine {
 		}*/
 		
 		public void print_content() {
-			stdout.printf("%s (%s %f) ",this.text,this.return_type(),this.confidence);
+			stderr.printf("%s (%s %f) ",this.text,this.return_type(),this.confidence);
 		}
 		
 		public void reset_iterator() {
@@ -357,15 +357,15 @@ namespace Submarine {
 			
 			NameParserNode? element1;
 			
-			stdout.printf("\n\n");
+			stderr.printf("\n\n");
 			for(element1=tree;element1!=null;element1=element1.next) {
 				element1.print_content();
 			}
-			stdout.printf("\n\n");
+			stderr.printf("\n\n");
 		}
 		
 		public void print_data2() {
-			stdout.printf("Title: %s\nSeason %d, chapter %d\n",this.title,this.season,this.chapter);
+			stderr.printf("Title: %s\nSeason %d, chapter %d\n",this.title,this.season,this.chapter);
 		}*/
 		
 		public NameParser(File file) {
