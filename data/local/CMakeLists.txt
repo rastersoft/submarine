@@ -7,13 +7,13 @@ foreach(file_data ${list_data})
 		install(DIRECTORY
 			${file_data}
 		DESTINATION
-			share/submarine
+			${CMAKE_INSTALL_DATAROOTDIR}/submarine
 		)
 	ELSE()
 		install(FILES
 			${file_data}
 		DESTINATION
-			share/submarine
+			${CMAKE_INSTALL_DATAROOTDIR}/submarine
 		)
 	ENDIF()
 endforeach()

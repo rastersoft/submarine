@@ -1,11 +1,12 @@
 prefix=@CMAKE_INSTALL_PREFIX@
 real_prefix=@CMAKE_INSTALL_PREFIX@
 exec_prefix=@DOLLAR@{prefix}
-libdir=@DOLLAR@{exec_prefix}/lib
-includedir=@DOLLAR@{exec_prefix}/include
+libdir=@DOLLAR@{exec_prefix}/${CMAKE_INSTALL_LIBDIR}
+includedir=@DOLLAR@{exec_prefix}/${CMAKE_INSTALL_INCLUDEDIR}
 
 Name: Submarine
 Description: Submarine
 Version: 1.0.0
 Libs: -L@DOLLAR@{libdir} -lSubmarine
 Cflags: -I@DOLLAR@{includedir}
+Requires: gee-0.8 gio-2.0 glib-2.0 gobject-2.0 libarchive libsoup-2.4 libxml-2.0

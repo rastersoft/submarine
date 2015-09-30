@@ -1,7 +1,8 @@
 ### AutoVala Project ###
-autovala_version: 7
+autovala_version: 16
 project_name: submarine
 vala_version: 0.22
+
 
 vala_binary: src/submarine
 *version: 0.1.5
@@ -13,6 +14,7 @@ vala_local_package: Submarine
 *vala_source: report.vala
 *vala_source: submarine.vala
 
+
 vala_library: src/lib/Submarine
 *namespace: Submarine
 *vala_package: posix
@@ -23,6 +25,7 @@ vala_library: src/lib/Submarine
 *vala_check_package: libarchive
 *vala_check_package: libsoup-2.4
 *vala_check_package: libxml-2.0
+c_library: archive
 *vala_source: XMLRPC.vala
 *vala_source: bierdopje.vala
 *vala_source: cachedata.vala

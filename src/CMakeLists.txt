@@ -1,13 +1,14 @@
 ### CMakeLists automatically created with AutoVala
 ### Do not edit
 
-set (DATADIR "${CMAKE_INSTALL_PREFIX}/share")
+set (DATADIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}")
 set (PKGDATADIR "${DATADIR}/submarine")
 set (GETTEXT_PACKAGE "submarine")
 set (RELEASE_NAME "submarine")
 set (CMAKE_C_FLAGS "")
 set (PREFIX ${CMAKE_INSTALL_PREFIX})
 set (VERSION "0.1.5")
+set (TESTSRCDIR "${CMAKE_SOURCE_DIR}")
 set (DOLLAR "$")
 
 configure_file (${CMAKE_SOURCE_DIR}/src/Config.vala.cmake ${CMAKE_BINARY_DIR}/src/Config.vala)
@@ -46,7 +47,7 @@ add_executable(submarine ${VALA_C})
 install(TARGETS
 	submarine
 RUNTIME DESTINATION
-	bin/
+	${CMAKE_INSTALL_BINDIR}/
 )
 
 if(HAVE_VALADOC)
@@ -61,6 +62,13 @@ if(HAVE_VALADOC)
 	install(DIRECTORY
 		${CMAKE_BINARY_DIR}/valadoc
 	DESTINATION
-		share/doc/submarine
+		${CMAKE_INSTALL_DATAROOTDIR}/doc/submarine
 	)
 endif()
+
+install(CODE "MESSAGE (\"
+************************************************
+* Run 'sudo ldconfig' to complete installation *
+************************************************
+
+\") " )

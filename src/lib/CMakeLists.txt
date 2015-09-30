@@ -1,18 +1,20 @@
 ### CMakeLists automatically created with AutoVala
 ### Do not edit
 
-set (DATADIR "${CMAKE_INSTALL_PREFIX}/share")
+set (DATADIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}")
 set (PKGDATADIR "${DATADIR}/submarine")
 set (GETTEXT_PACKAGE "submarine")
 set (RELEASE_NAME "submarine")
 set (CMAKE_C_FLAGS "")
 set (PREFIX ${CMAKE_INSTALL_PREFIX})
 set (VERSION "1.0.0")
+set (TESTSRCDIR "${CMAKE_SOURCE_DIR}")
 set (DOLLAR "$")
 
 configure_file (${CMAKE_SOURCE_DIR}/src/lib/Config.vala.cmake ${CMAKE_BINARY_DIR}/src/lib/Config.vala)
 add_definitions(-DGETTEXT_PACKAGE=\"${GETTEXT_PACKAGE}\")
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/Submarine.pc ${CMAKE_CURRENT_BINARY_DIR}/Submarine.pc)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/Submarine.deps ${CMAKE_CURRENT_BINARY_DIR}/Submarine.deps)
 set (VERSION "1.0.0")
 add_definitions (${DEPS_CFLAGS})
 link_libraries ( ${DEPS_LIBRARIES} )
@@ -62,6 +64,7 @@ GENERATE_HEADER
 
 add_library(Submarine SHARED ${VALA_C})
 
+target_link_libraries( Submarine archive )
 set_target_properties( Submarine PROPERTIES
 VERSION
 	1.0.0
@@ -71,27 +74,32 @@ SOVERSION
 install(TARGETS
 	Submarine
 LIBRARY DESTINATION
-	lib/
+	${CMAKE_INSTALL_LIBDIR}/
 )
 install(FILES
 	${CMAKE_CURRENT_BINARY_DIR}/Submarine.h
 DESTINATION
-	include/
+	${CMAKE_INSTALL_INCLUDEDIR}/
 )
 install(FILES
 	${CMAKE_CURRENT_BINARY_DIR}/Submarine.vapi
 DESTINATION
-	share/vala/vapi/
+	${CMAKE_INSTALL_DATAROOTDIR}/vala/vapi/
+)
+install(FILES
+	${CMAKE_CURRENT_BINARY_DIR}/Submarine.deps
+DESTINATION
+	${CMAKE_INSTALL_DATAROOTDIR}/vala/vapi/
 )
 install(FILES
 	${CMAKE_CURRENT_BINARY_DIR}/Submarine-1.0.gir
 DESTINATION
-	share/gir-1.0/
+	${CMAKE_INSTALL_DATAROOTDIR}/gir-1.0/
 )
 install(FILES
 	${CMAKE_CURRENT_BINARY_DIR}/Submarine.pc
 DESTINATION
-	lib/pkgconfig/
+	${CMAKE_INSTALL_LIBDIR}/pkgconfig/
 )
 if(HAVE_VALADOC)
 	valadoc(Submarine
@@ -105,6 +113,6 @@ if(HAVE_VALADOC)
 	install(DIRECTORY
 		${CMAKE_BINARY_DIR}/valadoc
 	DESTINATION
-		share/doc/submarine
+		${CMAKE_INSTALL_DATAROOTDIR}/doc/submarine
 	)
 endif()
