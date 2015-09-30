@@ -193,8 +193,6 @@ namespace Submarine {
 						subtitle.format = (string)result.lookup("SubFormat");
 						subtitle.language = (string)result.lookup("ISO639");
 						subtitle.rating = double.parse((string)result.lookup("SubRating"));
-						GLib.stdout.printf("open subtitles rating: %f\n",subtitle.rating);
-
 						subtitles_found_map.set(hash_file[(string)result.lookup("MovieHash")], subtitle);
 
 						results++;

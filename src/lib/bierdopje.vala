@@ -47,7 +47,7 @@ namespace Submarine {
 
 			var parser = new Submarine.NameParser(file);
 			if (parser.title==null) {
-				stdout.printf("Can't determine the serie/movie title\n");
+				stderr.printf("Can't determine the serie/movie title\n");
 				return subtitles_downloaded;
 			}
 
@@ -59,7 +59,7 @@ namespace Submarine {
 				title="%s".printf(parser.title);
 			}
 
-			stdout.printf("BierDopje: asking for \"%s\", Season %d, Chapter %d\n",title, parser.season, parser.chapter);
+			stderr.printf("BierDopje: asking for \"%s\", Season %d, Chapter %d\n",title, parser.season, parser.chapter);
 
 			var retval=cache.get_key(title);
 			bool get_keys=false;
@@ -144,7 +144,7 @@ namespace Submarine {
 										Value v = c_uri;
 										Subtitle subtitle = new Subtitle(this.info, v);
 										subtitle.language=l;
-										subtitle.rating=7.0; // medium, because we are guessing the file name
+										subtitle.rating=4.0; // medium, because we are guessing the file name
 										subtitles_downloaded.add(subtitle);
 									}
 								}

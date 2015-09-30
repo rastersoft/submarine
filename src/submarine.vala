@@ -11,21 +11,21 @@ private class SubmarineConsole : Object {
 		PROGRAM_ERROR = 1,
 		INPUT_ERROR = 2
 	}
-	
+
 	private const string[] SUBTITLE_EXTENSIONS = {
 		"aqt", "jss", "sub", "ttxt",
 		"pjs", "psb", "rt", "smi",
 		"ssf", "srt", "gsub", "ssa",
 		"ass", "usf", "txt"
 	};
-	
+
 	[CCode (array_length = false, array_null_terminated = true)]
 	private static string[] _filenames;
 	[CCode (array_length = false, array_null_terminated = true)]
 	private static string[] _languages;
 	[CCode (array_length = false, array_null_terminated = true)]
 	private static string[] _server_codes;
-	
+
 	const OptionEntry[] options = {
 		{ "", 0, 0, OptionArg.FILENAME_ARRAY, out _filenames, "List of movie files", "FILE..." },
 		{ "language", 'l', 0, OptionArg.STRING_ARRAY, out _languages, "Set languages to filter (use '-l help' to list available options)", "CODE" },
@@ -36,10 +36,10 @@ private class SubmarineConsole : Object {
 		{ "version", 'V', 0, OptionArg.NONE, out info, "Show program information", null },
 		{ null }
 	};
-	
+
 	private const string name = Constants.RELEASE_NAME;
 	private const string version = Constants.VERSION;
-	
+
 	private static Gee.Set<string> filenames;
 	private static Gee.MultiMap<string, string> existing_subtitles;
 	private static Gee.Set<string> languages;
@@ -48,26 +48,25 @@ private class SubmarineConsole : Object {
 	private static bool quiet = false;
 	private static bool verbose = false;
 	private static bool info = false;
-	
+
 	private static Submarine.Session session;
-	
+
 	private static Gee.Set<string> string_array_to_set(string[] array) {
 		var hash_set = new Gee.HashSet<string>();
-		
+
 		foreach(string el in array) {
 			hash_set.add(el);
 		}
-		
+
 		return hash_set;
 	}
-	
+
 	private static void init(ref unowned string[] args) {
 		var args_length = args.length;
-		
+
 		var opt_context = new OptionContext("- download subtitles");
 		string description = "Powered by:\n";
-		foreach(var server_code in Submarine.get_server_codes())
-		{
+		foreach(var server_code in Submarine.get_server_codes()) {
 			var server_info = Submarine.get_server_info(server_code);
 			description += "  %s (%s)\n".printf(server_info.name, server_info.address);
 		}
@@ -75,47 +74,53 @@ private class SubmarineConsole : Object {
 		opt_context.set_description(description);
 		opt_context.set_help_enabled(true);
 		opt_context.add_main_entries(options, null);
-		
-		
+
+
 		//parse args
 		try {
 			opt_context.parse(ref args);
 		} catch(Error e) {
 			Report.error(e.message, ExitValue.INPUT_ERROR);
 		}
-		
+
 		//no args
 		if(args_length == 1) {
 			Report.message(opt_context.get_help(true, null), false);
 			Process.exit(ExitValue.INPUT_ERROR);
 		}
-		
+
 		filenames = string_array_to_set(_filenames);
 		languages = string_array_to_set(_languages);
 		server_codes = string_array_to_set(_server_codes);
-		
+
 		//program info
 		if(info) {
 			Report.message("%s %s".printf(name, version));
 			Process.exit(ExitValue.OK);
 		}
-		
+
 		//verbosity
 		if(quiet) {
 			Report.verbosity = Report.Verbosity.NONE;
 		} else if(verbose) {
 			Report.verbosity = Report.Verbosity.ALL;
 		}
-		
+
 		//server codes
 		foreach(var code in server_codes) {
 			var all_server_codes = Submarine.get_server_codes();
-			
+
 			if(code == "help") {
-				Report.message("Available servers:");
+				if (Report.verbosity != Report.Verbosity.NONE) {
+					Report.message("Available servers:");
+				}
 				foreach(var all_code in all_server_codes) {
 					var server_info = Submarine.get_server_info(all_code);
-					Report.message("  %s - %s (%s)".printf(server_info.code, server_info.name, server_info.address));
+					if (Report.verbosity != Report.Verbosity.NONE) {
+						Report.message("  %s - %s (%s)".printf(server_info.code, server_info.name, server_info.address));
+					} else {
+						GLib.stdout.printf("%s:%s\n".printf(server_info.code, server_info.name));
+					}
 				}
 				Process.exit(ExitValue.OK);
 			} else if(!all_server_codes.contains(code)) {
@@ -125,7 +130,7 @@ private class SubmarineConsole : Object {
 		//languages
 		foreach(var language in languages) {
 			var all_language_codes = Submarine.get_language_codes();
-			
+
 			if(language == "help") {
 				Report.message("Available languages:");
 				foreach(var all_code in all_language_codes) {
@@ -143,25 +148,25 @@ private class SubmarineConsole : Object {
 				Report.error("Language '%s' does not exist! Use '-l help' to list available options.".printf(language), ExitValue.INPUT_ERROR);
 			}
 		}
-		
+
 		//filenames
 		if(filenames.is_empty) {
 			Report.error("No file selected!", ExitValue.INPUT_ERROR);
 		}
-		
+
 		existing_subtitles = new Gee.HashMultiMap<string, string>();
 		foreach(var filename in filenames) {
 			if(!FileUtils.test(filename, FileTest.IS_REGULAR)) {
 				Report.error("File '%s' does not exist!".printf(filename), ExitValue.INPUT_ERROR);
 			}
-			
+
 			foreach(var sub_extension in SUBTITLE_EXTENSIONS) {
 				string sub_filename = filename;
 				sub_filename = sub_filename.slice(0, sub_filename.last_index_of(".")+1) + sub_extension;
-				
+
 				if(FileUtils.test(sub_filename, FileTest.EXISTS)) {
 					existing_subtitles.set(filename, sub_filename);
-					
+
 					if(!force) {
 						Report.warning("File '%s' already has a subtitle! Use '--force' to replace.".printf(filename), true, Report.Verbosity.ALL);
 						break; //we only need to find one subtitle per file if we don't use force
@@ -171,7 +176,7 @@ private class SubmarineConsole : Object {
 				}
 			}
 		}
-		
+
 		//default values
 		if(server_codes.is_empty) {
 			server_codes.add_all(Submarine.get_server_codes());
@@ -183,11 +188,11 @@ private class SubmarineConsole : Object {
 			Report.warning("No language(s) selected, using ['eng', 'en'] languages.", true, Report.Verbosity.ALL);
 		}
 	}
-	
+
 	private static string? subtitle_save(string filename, Submarine.Subtitle subtitle, bool force = false) {
 		string sub_filename = subtitle.get_filename(filename);
 		File file = File.new_for_commandline_arg(sub_filename);
-		
+
 		if(subtitle.has_data) {
 			if(!file.query_exists() ||
 			   (file.query_exists() && force)) {
@@ -199,28 +204,28 @@ private class SubmarineConsole : Object {
 				}
 			}
 		}
-		
+
 		return null;
 	}
-	
+
 	private static Gee.Map<string, string> subtitle_save_multiple(Gee.Map<string, Submarine.Subtitle> save_map, bool force = false) {
 		var subtitles_saved = new Gee.HashMap<string, string>();
-		
+
 		foreach(var entry in save_map.entries) {
 			var sub_filename = subtitle_save(entry.key, entry.value, force);
 			if(sub_filename != null) {
 				subtitles_saved.set(entry.key, sub_filename);
 			}
 		}
-		
+
 		return subtitles_saved;
 	}
-	
+
 	private static int main(string[] args) {
 		init(ref args);
-		
+
 		session = new Submarine.Session();
-		
+
 		//Connect to server(s)
 		Report.message("Connecting to servers:");
 		var connected_servers = session.server_connect_multiple(server_codes);
@@ -233,10 +238,10 @@ private class SubmarineConsole : Object {
 				Report.message("  (Failure) %s (%s)".printf(server_info.name, server_info.address));
 			}
 		}
-		
+
 		if(!connected_servers.is_empty) {
 			Gee.Set<string> search_filenames;
-			
+
 			if(!force) {
 				search_filenames = new Gee.HashSet<string>();
 				search_filenames.add_all(filenames);
@@ -244,7 +249,7 @@ private class SubmarineConsole : Object {
 			} else {
 				search_filenames = filenames;
 			}
-			
+
 			//Search for available subtitles
 			if(!search_filenames.is_empty) {
 				Report.message("Searching for subtitles:");
@@ -258,7 +263,7 @@ private class SubmarineConsole : Object {
 					Report.message("  (0) %s".printf(filename));
 				}
 			}
-			
+
 			//Select and download one subtitle per file
 			var subtitles_download_map = new Gee.HashMap<string, Submarine.Subtitle>();
 			//  Select subtitles with best rating per each file
@@ -288,7 +293,7 @@ private class SubmarineConsole : Object {
 					Report.message("  (Could not download) %s".printf(entry.value.get_filename(entry.key)));
 				}
 			}
-			
+
 			//Save downloaded subtitles
 			//  Delete existing subtitles if we use force
 			if(force) {
@@ -300,7 +305,7 @@ private class SubmarineConsole : Object {
 			}
 			//  Save new ones
 			var subtitles_saved_map = subtitle_save_multiple(subtitles_save_map, force);
-			
+
 			//Report success/failure for each file
 			var error = false;
 			Report.message("Summary:");
@@ -336,7 +341,7 @@ private class SubmarineConsole : Object {
 					error = true;
 				}
 			}
-			
+
 			if(error) {
 				return ExitValue.PROGRAM_ERROR;
 			}
@@ -345,7 +350,7 @@ private class SubmarineConsole : Object {
 			Report.message("  Could not connect to any Server!");
 			return ExitValue.PROGRAM_ERROR;
 		}
-		
+
 		return ExitValue.OK;
 	}
 }

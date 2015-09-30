@@ -246,9 +246,7 @@ namespace Submarine {
 								subtitle.format = "";
 								subtitle.language = (string)result.lookup("lang");
 								subtitle.rating = (int)result.lookup("rating")*2;
-								GLib.stdout.printf("podnapisi rating: %f\n",subtitle.rating);
 								subtitles_found_map.set(hash_file[hash], subtitle);
-
 								results++;
 							}
 						}
