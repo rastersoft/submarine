@@ -1,7 +1,7 @@
 ### AutoVala Project ###
 autovala_version: 16
 project_name: submarine
-vala_version: 0.22
+vala_version: 0.28
 
 
 vala_binary: src/submarine
