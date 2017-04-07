@@ -111,9 +111,9 @@ namespace Submarine {
 			var message = Soup.XMLRPC.request_new (XMLRPC_URI,
 					"LogIn",
 					typeof(string), username,
-					typeof(string), password, 
+					typeof(string), password,
 					typeof(string), "",
-					typeof(string), "OS Test User Agent");
+					typeof(string), "submarineraster");
 
 			if(XMLRPC.call(this.session, message, out vh) && (string)(vh.lookup("status")) == "200 OK") {
 				this.session_token = (string)(vh.lookup("token"));

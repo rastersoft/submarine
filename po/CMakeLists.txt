@@ -2,5 +2,5 @@
 ### Do not edit
 
 include (Translations)
-add_translations_directory("submarine")
-add_translations_catalog("submarine" ../src )
+add_translations_directory("rastersubmarine")
+add_translations_catalog("rastersubmarine" ../src ../src/lib )

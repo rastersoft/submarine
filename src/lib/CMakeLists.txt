@@ -2,16 +2,16 @@
 ### Do not edit
 
 set (DATADIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}")
-set (PKGDATADIR "${DATADIR}/submarine")
-set (GETTEXT_PACKAGE "submarine")
-set (RELEASE_NAME "submarine")
+set (PKGDATADIR "${DATADIR}/rastersubmarine")
+set (GETTEXT_PACKAGE "rastersubmarine")
+set (RELEASE_NAME "rastersubmarine")
 set (CMAKE_C_FLAGS "")
 set (PREFIX ${CMAKE_INSTALL_PREFIX})
 set (VERSION "1.0.0")
 set (TESTSRCDIR "${CMAKE_SOURCE_DIR}")
 set (DOLLAR "$")
 
-configure_file (${CMAKE_SOURCE_DIR}/src/lib/Config.vala.cmake ${CMAKE_BINARY_DIR}/src/lib/Config.vala)
+configure_file (${CMAKE_SOURCE_DIR}/src/lib/Config.vala.base ${CMAKE_BINARY_DIR}/src/lib/Config.vala)
 add_definitions(-DGETTEXT_PACKAGE=\"${GETTEXT_PACKAGE}\")
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/Submarine.pc ${CMAKE_CURRENT_BINARY_DIR}/Submarine.pc)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/Submarine.deps ${CMAKE_CURRENT_BINARY_DIR}/Submarine.deps)
@@ -48,6 +48,11 @@ set (APP_SOURCES ${APP_SOURCES} subdb.vala)
 set (APP_SOURCES ${APP_SOURCES} subtitle.vala)
 set (APP_SOURCES ${APP_SOURCES} subtituloses.vala)
 
+
+if ((${CMAKE_BUILD_TYPE} STREQUAL "Debug") OR (${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo"))
+	set(COMPILE_OPTIONS ${COMPILE_OPTIONS} "-g")
+endif()
+
 set (COMPILE_OPTIONS ${COMPILE_OPTIONS} --library=Submarine --gir Submarine-1.0.gir )
 
 vala_precompile(VALA_C Submarine
@@ -70,6 +75,7 @@ VERSION
 	1.0.0
 SOVERSION
 	1 )
+
 
 install(TARGETS
 	Submarine
@@ -113,6 +119,6 @@ if(HAVE_VALADOC)
 	install(DIRECTORY
 		${CMAKE_BINARY_DIR}/valadoc
 	DESTINATION
-		${CMAKE_INSTALL_DATAROOTDIR}/doc/submarine
+		${CMAKE_INSTALL_DATAROOTDIR}/doc/rastersubmarine
 	)
 endif()

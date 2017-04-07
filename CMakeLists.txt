@@ -1,13 +1,17 @@
 ### CMakeLists automatically created with AutoVala
 ### Do not edit
 
-project (submarine)
+project (rastersubmarine)
 cmake_minimum_required (VERSION 2.6)
 cmake_policy (VERSION 2.8)
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 enable_testing ()
 option(ICON_UPDATE "Update the icon cache after installing" ON)
 option(BUILD_VALADOC "Build API documentation if Valadoc is available" OFF)
+
+if( NOT CMAKE_BUILD_TYPE )
+	set(CMAKE_BUILD_TYPE Release)
+endif()
 
 include(GNUInstallDirs)
 if( ( ${CMAKE_INSTALL_PREFIX} MATCHES "^/usr/local" ) )
@@ -37,6 +41,7 @@ set(MODULES_TO_CHECK ${MODULES_TO_CHECK} libsoup-2.4)
 set(MODULES_TO_CHECK ${MODULES_TO_CHECK} libxml-2.0)
 
 pkg_check_modules(DEPS REQUIRED ${MODULES_TO_CHECK})
+
 
 add_subdirectory(doc)
 add_subdirectory(po)

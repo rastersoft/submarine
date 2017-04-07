@@ -2,7 +2,7 @@ using GLib;
 using Gee;
 // using GIO
 
-// project version = 0.1.5
+// project version = 0.1.6
 
 private class SubmarineConsole : Object {
 
