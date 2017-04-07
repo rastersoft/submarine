@@ -14,10 +14,10 @@ Currently it searchs in:
   * the subtitle db
   * subtitulos es
 
-Building and installing Submarine
+Building and installing Rastersubmarine
 =================================
 
-Submarine is writen in Vala, so you need the vala compiler (valac) and its libraries (vapi). You also need CMake.
+Rastersubmarine is writen in Vala, so you need the vala compiler (valac) and its libraries (vapi). You also need CMake.
 
 To compile and install it, just follow these instructions:
 
