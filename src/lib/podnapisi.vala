@@ -273,8 +273,8 @@ namespace Submarine {
 					typeof(string), this.session_token,
 					typeof(ValueArray), requests);
 
-			if(XMLRPC.call(this.session, message, out vh) && 
-			   (int)vh.lookup("status") == 200 && 
+			if(XMLRPC.call(this.session, message, out vh) &&
+			   (int)vh.lookup("status") == 200 &&
 			   ((ValueArray)vh.lookup("names")).get_nth(0) != null) {
 				HashTable<string,Value?> result = (HashTable<string,Value?>)((ValueArray)vh.lookup("names")).get_nth(0);
 

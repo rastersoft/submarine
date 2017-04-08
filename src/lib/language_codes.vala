@@ -1,12 +1,12 @@
 namespace Submarine {
-	
+
 	public struct LanguageInfo {
 		public string long_code { get; private set; }
 		public string? long_code_alt { get; private set; } //if this is set, then long_code has bibliographical meaning and long_code_alt terminological meaning
 		public string? short_code { get; private set; }
 		public string name { get; private set; }
-		
-		
+
+
 		public LanguageInfo(string long_code, string long_code_alt, string short_code, string name) {
 			this.long_code = long_code;
 			this.long_code_alt = long_code_alt;
@@ -14,10 +14,10 @@ namespace Submarine {
 			this.name = name;
 		}
 	}
-	
+
 	private Gee.List<string> all_language_codes = null;
 	private Gee.Map<string, LanguageInfo?> language_infos = null;
-	
+
 	public Gee.List<string> get_language_codes() {
 		if(all_language_codes == null) {
 			all_language_codes = new Gee.ArrayList<string>();
@@ -33,10 +33,10 @@ namespace Submarine {
 			}
 			all_language_codes.sort( (a, b) => {return ((string)a).ascii_casecmp((string)b);} );
 		}
-		
+
 		return all_language_codes.read_only_view;
 	}
-	
+
 	public LanguageInfo? get_language_info(string language_code) {
 		if(language_infos == null) {
 			language_infos = new Gee.HashMap<string, LanguageInfo?>();
@@ -51,14 +51,14 @@ namespace Submarine {
 				}
 			}
 		}
-		
+
 		if(language_code in language_infos.keys) {
 			return language_infos[language_code];
 		}
-		
+
 		return null;
 	}
-	
+
 	public string get_alternate(string language) {
 	/* If a two-letter language is given, it will return the equivalent three-letter code;
 	   if a three-letter code language is given, it will return the equivalent two-letter code (if possible) */
@@ -85,7 +85,7 @@ namespace Submarine {
 		}
 		return "";
 	}
-	
+
 	//parsed from http://www.loc.gov/standards/iso639-2/php/code_list.php
 	private const LanguageInfo[] LANGUAGE_INFOS_ARRAY = {
 		{"aar",	null,	"aa",	"Afar"},
@@ -574,5 +574,5 @@ namespace Submarine {
 		{"zxx",	null,	null,	"No linguistic content; Not applicable"},
 		{"zza",	null,	null,	"Zaza; Dimili; Dimli; Kirdki; Kirmanjki; Zazaki"}
 	};
-	
+
 }
