@@ -1,5 +1,5 @@
 namespace Submarine {
-	
+
 	public enum DataType {
 		UNKNOWN,
 		FREETEXT,
@@ -9,14 +9,14 @@ namespace Submarine {
 		RESOLUTION,
 		SOURCE
 	}
-	
+
 	public enum Resolution {
 		PAL_NTSC,
 		HDREADY,
 		FULLHD,
 		UNKNOWN
 	}
-	
+
 	public enum Codec {
 		X264,
 		DIVX,
@@ -24,24 +24,24 @@ namespace Submarine {
 		MPEG,
 		UNKNOWN
 	}
-	
+
 	public enum Source {
 		DVDRIP,
 		BDRIP,
 		HDTV,
 		UNKNOWN
 	}
-	
+
 	public class NameParserNode {
-		
+
 		private string text;
 		public NameParserNode ?next;
 		public unowned NameParserNode ?prev;
-		
+
 		public NameParserNode ?child;
-		
+
 		public NameParserNode ?iterator;
-		
+
 		public Submarine.DataType type;
 		public Submarine.Resolution resolution;
 		public Submarine.Codec codec;
@@ -50,13 +50,13 @@ namespace Submarine {
 		public int year;
 		public int season;
 		public int chapter;
-		
+
 		public int level;
-		
+
 		public string get_inner_text() {
 			return this.text;
 		}
-		
+
 		private string return_type() {
 			switch(this.type) {
 			case DataType.FREETEXT:
@@ -75,7 +75,7 @@ namespace Submarine {
 				return "Unknown";
 			}
 		}
-		
+
 		public NameParserNode.empty() {
 			this.type=DataType.UNKNOWN;
 			this.text="";
@@ -83,7 +83,7 @@ namespace Submarine {
 			this.next=null;
 			this.prev=null;
 		}
-		
+
 		private void init_all() {
 			this.type=DataType.UNKNOWN;
 			this.resolution=Resolution.UNKNOWN;
@@ -93,15 +93,15 @@ namespace Submarine {
 			this.year=-1;
 			this.season=-1;
 			this.chapter=-1;
-			
+
 		}
-		
+
 		public NameParserNode.new_copy(NameParserNode? p) {
-			
+
 			this.init_all();
-			
+
 			if (p!=null) {
-			
+
 				this.type=p.type;
 				this.confidence=p.confidence;
 				this.text=p.text;
@@ -132,11 +132,11 @@ namespace Submarine {
 				stderr.printf("Copiando NULL\n");
 			}
 		}
-		
+
 		public NameParserNode(string txt, NameParserNode ?thenext=null, int c_level=2) {
-			
+
 			this.init_all();
-			
+
 			this.level=c_level;
 			this.type=DataType.UNKNOWN;
 			this.text=txt;
@@ -152,8 +152,7 @@ namespace Submarine {
 			this.split(']');
 			this.split('{');
 			this.split('}');
-			
-			
+
 			if (this.check_pattern("s\\d\\de\\d\\d",6,DataType.SEASON_CHAPTER)) {
 				// Check sAAeBB Season/Episode
 				this.season=int.parse(this.text.substring(1,2));
@@ -169,14 +168,14 @@ namespace Submarine {
 				this.chapter=int.parse(this.text.substring(2,2));
 				this.confidence*=0.9; // a little less confidence to this format
 			}
-			
+
 			// Check for year
 			if (this.check_pattern("\\(\\d\\d\\d\\d\\)",6,DataType.YEAR)) {
 				this.year=int.parse(this.text.substring(1,4));
 			} else if (this.check_pattern("\\d\\d\\d\\d",4,DataType.YEAR)) {
 				this.year=int.parse(this.text.substring(0,4));
 			}
-			
+
 			// Check for resolution
 			if ((this.check_pattern("720p",4,DataType.RESOLUTION))||(this.check_pattern("1080i",4,DataType.RESOLUTION))) {
 				this.resolution=Resolution.HDREADY;
@@ -185,9 +184,9 @@ namespace Submarine {
 					this.resolution=Resolution.FULLHD;
 				}
 			}
-			
+
 			// Check for codec
-			
+
 			if (this.check_pattern("x264",4,DataType.CODEC)) {
 				this.codec=Codec.X264;
 			} else if (this.check_pattern("divx",4,DataType.CODEC)) {
@@ -198,9 +197,9 @@ namespace Submarine {
 				this.codec=Codec.MPEG;
 				this.confidence*=0.75;
 			}
-			
+
 			// Check for source
-			
+
 			if (this.check_pattern("bdrip",5,DataType.SOURCE)) {
 				this.source=Source.BDRIP;
 			} else if (this.check_pattern("dvdrip",6,DataType.SOURCE)) {
@@ -209,16 +208,16 @@ namespace Submarine {
 				this.source=Source.HDTV;
 			}
 		}
-		
+
 		private bool check_pattern(string pattern,int length,Submarine.DataType type) {
-			
+
 			MatchInfo match_info;
-			
+
 			var i_year = new GLib.Regex(pattern,RegexCompileFlags.CASELESS);
 			if (i_year.match(this.text, 0, out match_info)) {
 				int s_pos;
 				int e_pos;
-				
+
 				match_info.fetch_pos(0,out s_pos, out e_pos);
 				if ((s_pos==0)&&(this.text.length==length)) {
 					this.confidence=1.0/this.level;
@@ -239,7 +238,7 @@ namespace Submarine {
 			}
 			return false;
 		}
-		
+
 		private void split(unichar character, unichar? c1=null, unichar? c2=null) {
 			var pos=this.text.index_of_char(character);
 			if (pos==0) {
@@ -263,31 +262,31 @@ namespace Submarine {
 				}
 			}
 		}
-		
+
 		/*private void dsplit(unichar c1, unichar c2) {
 			this.split(c1,null,c1);
 			this.split(c2,c2,null);
 		}*/
-		
+
 		public void print_content() {
 			stderr.printf("%s (%s %f) ",this.text,this.return_type(),this.confidence);
 		}
-		
+
 		public void reset_iterator() {
 			this.iterator=null;
 			if (this.child!=null) {
 				this.child.reset_iterator();
 			}
-			
+
 			if (this.next!=null) {
 				this.next.reset_iterator();
 			}
 		}
-		
+
 		public NameParserNode? get_next_iterator() {
-			
+
 			NameParserNode ?tmp;
-			
+
 			if (this.child==null) {
 				if(this.iterator==null) {
 					this.iterator=this;
@@ -311,31 +310,31 @@ namespace Submarine {
 			}
 		}
 	}
-	
+
 	public class NameParser{
-	
-		public string title;	
+
+		public string title;
 		public int year;
 		public int season;
 		public int chapter;
 		public Submarine.Resolution resolution;
 		public Submarine.Codec codec;
 		public Submarine.Source source;
-		
+
 		private NameParserNode ?node;
 		private NameParserNode ?iterator;
-		
+
 		private void reset_iterator() {
 			this.iterator=null;
 			if (this.node!=null) {
 				this.node.reset_iterator();
 			}
 		}
-		
+
 		private NameParserNode? get_next_iterator() {
-			
+
 			NameParserNode ?tmp;
-			
+
 			if (this.node==null) {
 				return null;
 			} else {
@@ -352,41 +351,41 @@ namespace Submarine {
 				return null;
 			}
 		}
-		
+
 		/* public void print_data(NameParserNode tree) {
-			
+
 			NameParserNode? element1;
-			
+
 			stderr.printf("\n\n");
 			for(element1=tree;element1!=null;element1=element1.next) {
 				element1.print_content();
 			}
 			stderr.printf("\n\n");
 		}
-		
+
 		public void print_data2() {
 			stderr.printf("Title: %s\nSeason %d, chapter %d\n",this.title,this.season,this.chapter);
 		}*/
-		
+
 		public NameParser(File file) {
-			
+
 			// find season/chapter
-			
+
 			var tmp=file.get_basename();
 			var pos = tmp.last_index_of(".");
 			var filename=tmp.substring(0,pos);
 			//var extension=tmp.substring(pos+1);
-			
+
 			// process the filename and create the data tree
 			node=new NameParserNode(filename);
-			
+
 			// create a linear tree with the processed elements
-			
+
 			NameParserNode ?element1;
 			NameParserNode ?element2;
 			NameParserNode ?tree=null;
 			unowned NameParserNode ?last=null;
-			
+
 			this.reset_iterator();
 			do {
 				element1=this.get_next_iterator();
@@ -403,16 +402,16 @@ namespace Submarine {
 				element2.prev=last;
 				last=element2;
 			} while(true);
-			
-			// Group same elements and increase their confidence			
-			
+
+			// Group same elements and increase their confidence
+
 			for(element1=tree;element1!=null;element1=element1.next) {
 				for(element2=element1.next;element2!=null;element2=element2.next) {
 					if ((element1.type!=DataType.UNKNOWN)&&(element1.type==element2.type)) {
 						bool are_equal;
-						
+
 						are_equal=false;
-						
+
 						switch(element1.type) {
 						case Submarine.DataType.YEAR:
 							if (element1.year==element2.year) {
@@ -443,10 +442,10 @@ namespace Submarine {
 						break;
 						}
 						if (are_equal==true) {
-							
+
 							// Combine the confidence of both elements
 							element1.confidence=element1.confidence+element2.confidence-element1.confidence*element2.confidence;
-							
+
 							// and remove the element2
 							if (last==element2) {
 								last=element2.prev;
@@ -457,9 +456,9 @@ namespace Submarine {
 					}
 				}
 			}
-			
+
 			// finally, take the element with the biggest confidence
-			
+
 			this.title="";
 			this.year=-1;
 			this.season=-1;
@@ -467,15 +466,15 @@ namespace Submarine {
 			this.resolution=Resolution.UNKNOWN;
 			this.codec=Codec.UNKNOWN;
 			this.source=Source.UNKNOWN;
-			
+
 			double year_confidence=0.0;
 			double season_confidence=0.0;
 			double resolution_confidence=0.0;
 			double codec_confidence=0.0;
 			double source_confidence=0.0;
-			
+
 			bool doing_title=true;
-			
+
 			for(element1=tree;element1!=null;element1=element1.next) {
 				switch(element1.type) {
 				case Submarine.DataType.YEAR:
@@ -520,7 +519,7 @@ namespace Submarine {
 							if (this.title!="") {
 								this.title+=" ";
 							}
-							this.title+=element1.get_inner_text();
+							this.title+=element1.get_inner_text().down();
 						}
 					}
 				break;
@@ -528,7 +527,6 @@ namespace Submarine {
 				break;
 				}
 			}
-			
 		}
 	}
 }
