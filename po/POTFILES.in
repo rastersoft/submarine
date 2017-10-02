@@ -1,0 +1,15 @@
+src/report.vala
+src/submarine.vala
+src/lib/XMLRPC.vala
+src/lib/bierdopje.vala
+src/lib/cachedata.vala
+src/lib/divxsubs.vala
+src/lib/language_codes.vala
+src/lib/nameparser.vala
+src/lib/open_subtitles.vala
+src/lib/podnapisi.vala
+src/lib/server.vala
+src/lib/session.vala
+src/lib/subdb.vala
+src/lib/subtitle.vala
+src/lib/subtituloses.vala
