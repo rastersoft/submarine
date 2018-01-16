@@ -438,6 +438,7 @@ namespace Submarine {
 		{"pol",	null,	"pl",	"Polish"},
 		{"pon",	null,	null,	"Pohnpeian"},
 		{"por",	null,	"pt",	"Portuguese"},
+		{"pob",	null,	"pb",	"Portuguese - Brazillian"},
 		{"pra",	null,	null,	"Prakrit languages"},
 		{"pro",	null,	null,	"Provençal, Old (to 1500);Occitan, Old (to 1500)"},
 		{"pus",	null,	"ps",	"Pushto; Pashto"},
